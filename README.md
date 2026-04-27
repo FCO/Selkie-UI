@@ -46,12 +46,7 @@ The DSL handles the glue between your declarative definitions and Selkie's imper
 State Management
 ----------------
 
-`new-state` creates reactive state variables that automatically dispatch updates and re-render affected UI elements:
-
-```raku
-my $counter := new-state 0;
-$counter = $counter + 1;  # Triggers UI update
-```
+`new-state` creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
 
 Builders
 --------
@@ -77,39 +72,48 @@ Examples
 
 ### Text input with reactive display
 
-This example creates a text input field that echoes user input to a text stream above it. Type in the input box and press Enter to see the text appear:
+This example creates a text input field that echoes user input to a text stream above it.
+
+The program creates a reactive string variable with `new-state`, places a vertical box layout on screen, adds a text stream widget to display messages, and adds a text input widget. When the user types and presses Enter, the input text is stored in the reactive variable, which automatically updates the text stream, and the input field is cleared for the next entry.
 
 ```raku
 use Selkie::UI;
+
 App {
-	my $next-msg := new-state Str;             # Reactive variable, starts empty
-	VBox {                                     # Vertical layout container
-		TextStream.append: { $next-msg };  # Displays $next-msg, auto-updates when it changes
-		TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
-			$next-msg = $text;         # Update state with submitted text
-			$input.clear               # Clear the input field for next entry
-		}
-	}
+    my $next-msg := new-state Str;
+    VBox {
+        TextStream.append: { $next-msg };
+        TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
+            $next-msg = $text;
+            $input.clear
+        }
+    }
 }
 ```
+
+The `App` block is the entry point that initializes the application. The `new-state` function creates a reactive state variable bound with `:=`, initialized as an empty string. The `VBox` widget arranges its children vertically from top to bottom. `TextStream.append` with a block argument reactively displays the value of `$next-msg` and updates whenever it changes. `TextInput` creates a single-line text input with a placeholder hint. `.size(1)` constrains the input to a fixed height of one row. `.on-submit` registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
 
 ![](./text.gif)
 
 ### Button with reactive state
 
-This example shows a button whose label changes based on a numeric state variable. Each button press increments the counter, automatically updating the label:
+This example shows a button whose label changes based on a numeric state variable.
+
+The program creates a reactive integer counter, places it in a vertical box, and displays a button. The button label is computed from the counter value using a block—when the counter changes, the label automatically re-renders. Each button press increments the counter, updating both the counter value and the button label.
 
 ```raku
 use Selkie::UI;
 
 App {
-	my UInt $val := new-state 0;                               # Reactive counter, starts at 0
-	VBox {
-		Button.label({ $val ?? "BLE $val" !! "BLA $val" }) # Label shows "BLA 0" then "BLE 1", etc.
-			.on-press: { ++$val }                      # Increment counter when clicked
-	}
+    my UInt $val := new-state 0;
+    VBox {
+        Button.label({ $val ?? "BLE $val" !! "BLA $val" })
+            .on-press: { ++$val }
+    }
 }
 ```
+
+The `App` block is the entry point that initializes the application. The `new-state` function creates a reactive state variable bound with `:=`, initialized as zero. The `VBox` widget arranges its children vertically. `Button.label` with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val". `.on-press` registers a handler that runs when the user clicks the button. The handler increments the counter with `++$val`, triggering a UI update.
 
 ![](./test.gif)
 

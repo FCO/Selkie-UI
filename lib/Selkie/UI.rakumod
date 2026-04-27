@@ -33,14 +33,7 @@ The DSL handles the glue between your declarative definitions and Selkie's imper
 
 =head2 State Management
 
-C<new-state> creates reactive state variables that automatically dispatch updates and re-render affected UI elements:
-
-=begin code :lang<raku>
-
-my $counter := new-state 0;
-$counter = $counter + 1;  # Triggers UI update
-
-=end code
+C<new-state> creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
 
 =head2 Builders
 
@@ -59,43 +52,62 @@ Each builder uses a block syntax where widget properties are configured via chai
 
 =head3 Text input with reactive display
 
-This example creates a text input field that echoes user input to a text stream above it. Type in the input box and press Enter to see the text appear:
+This example creates a text input field that echoes user input to a text stream above it.
+
+The program creates a reactive string variable with C<new-state>, places a vertical box layout on screen, adds a text stream widget to display messages, and adds a text input widget. When the user types and presses Enter, the input text is stored in the reactive variable, which automatically updates the text stream, and the input field is cleared for the next entry.
 
 =begin code :lang<raku>
 
 use Selkie::UI;
+
 App {
-	my $next-msg := new-state Str;             # Reactive variable, starts empty
-	VBox {                                     # Vertical layout container
-		TextStream.append: { $next-msg };  # Displays $next-msg, auto-updates when it changes
-		TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
-			$next-msg = $text;         # Update state with submitted text
-			$input.clear               # Clear the input field for next entry
-		}
-	}
+    my $next-msg := new-state Str;
+    VBox {
+        TextStream.append: { $next-msg };
+        TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
+            $next-msg = $text;
+            $input.clear
+        }
+    }
 }
 
 =end code
+
+The C<App> block is the entry point that initializes the application.
+The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as an empty string.
+The C<VBox> widget arranges its children vertically from top to bottom.
+C<TextStream.append> with a block argument reactively displays the value of C<$next-msg> and updates whenever it changes.
+C<TextInput> creates a single-line text input with a placeholder hint.
+C<.size(1)> constrains the input to a fixed height of one row.
+C<.on-submit> registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
 
 ![](./text.gif)
 
 =head3 Button with reactive state
 
-This example shows a button whose label changes based on a numeric state variable. Each button press increments the counter, automatically updating the label:
+This example shows a button whose label changes based on a numeric state variable.
+
+The program creates a reactive integer counter, places it in a vertical box, and displays a button. The button label is computed from the counter value using a block—when the counter changes, the label automatically re-renders. Each button press increments the counter, updating both the counter value and the button label.
 
 =begin code :lang<raku>
 
 use Selkie::UI;
 
 App {
-	my UInt $val := new-state 0;                               # Reactive counter, starts at 0
-	VBox {
-		Button.label({ $val ?? "BLE $val" !! "BLA $val" }) # Label shows "BLA 0" then "BLE 1", etc.
-			.on-press: { ++$val }                      # Increment counter when clicked
-	}
+    my UInt $val := new-state 0;
+    VBox {
+        Button.label({ $val ?? "BLE $val" !! "BLA $val" })
+            .on-press: { ++$val }
+    }
 }
 
 =end code
+
+The C<App> block is the entry point that initializes the application.
+The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as zero.
+The C<VBox> widget arranges its children vertically.
+C<Button.label> with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val".
+C<.on-press> registers a handler that runs when the user clicks the button. The handler increments the counter with C<++$val>, triggering a UI update.
 
 ![](./test.gif)
 
@@ -109,6 +121,13 @@ use Selkie::UI::VBoxBuilder;
 use Selkie::UI::ButtonBuilder;
 use Selkie::UI::TextStreamBuilder;
 use Selkie::UI::TextInputBuilder;
+
+use Selkie::App;
+use Selkie::Layout::VBox;
+use Selkie::Widget::Button;
+use Selkie::Widget::TextStream;
+use Selkie::Widget::TextInput;
+use Selkie::Sizing;
 
 my %states;
 sub new-state(
@@ -151,8 +170,12 @@ multi Screen($node, Str :$name = "main") is export {
 	ScreenBuilder.new: :$name, :screen($node)
 }
 
-sub App(&block)               is export { AppBuilder.new(:&block).run                               }
-sub VBox(&block)              is export { VBoxBuilder.new: :&block                                  }
-sub Button(:$label)           is export { ButtonBuilder.new: |(:$label with $label)                 }
+sub App(&block) is export { AppBuilder.new(:&block).run }
+
+sub VBox(&block) is export { VBoxBuilder.new: :&block }
+
+sub Button(:$label) is export { ButtonBuilder.new: |(:$label with $label) }
+
 sub TextStream(:$placeholder) is export { TextStreamBuilder.new: |(:$placeholder with $placeholder) }
-sub TextInput(:$placeholder)  is export { TextInputBuilder.new: :$placeholder                       }
+
+sub TextInput(:$placeholder) is export { TextInputBuilder.new: :$placeholder }
