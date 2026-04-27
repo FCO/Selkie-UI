@@ -1,0 +1,95 @@
+use Test;
+use Selkie::UI;
+use Selkie::Widget::Button;
+use Selkie::Widget::Text;
+
+subtest 'HBox builder exists' => {
+    my $hbox = HBox { Button.label: 'Test' };
+    ok $hbox ~~ Selkie::UI::HBoxBuilder, 'HBox builder works';
+    is $hbox.obj.children.elems, 1, 'HBox has one child';
+}
+
+subtest 'Text builder exists' => {
+    my $text = Text(:text('Hello'));
+    ok $text ~~ Selkie::UI::TextBuilder, 'Text builder works';
+    is $text.obj.text, 'Hello', 'Text content set';
+}
+
+subtest 'Text builder with text method' => {
+    my $text = Text;
+    $text.text: 'Updated';
+    is $text.obj.text, 'Updated', 'Text updated via method';
+}
+
+subtest 'Split builder exists' => {
+    my $split = Split { Button.label: 'Test' };
+    ok $split ~~ Selkie::UI::SplitBuilder, 'Split builder works';
+}
+
+subtest 'Screen builder with VBox widget' => {
+    my $vbox = VBox {
+        Button.label: 'Test'
+    }
+    my $screen = Screen($vbox);
+    ok $screen ~~ Selkie::UI::ScreenBuilder, 'Screen builder works';
+    is $screen.name, 'main', 'Default name is main';
+}
+
+subtest 'Screen builder with custom name' => {
+    my $vbox = VBox {
+        Button.label: 'Test'
+    }
+    my $screen = Screen($vbox, :name<settings>);
+    is $screen.name, 'settings', 'Custom name set';
+}
+
+subtest 'VBox builder with block syntax' => {
+    my $vbox = VBox {
+        Button.label: 'Test'
+    }
+    ok $vbox ~~ Selkie::UI::VBoxBuilder, 'VBox builder works';
+    is $vbox.obj.children.elems, 1, 'VBox has one child';
+    is $vbox.obj.children[0].label, 'Test', 'Button label correct';
+}
+
+subtest 'VBox with multiple children' => {
+    my $vbox = VBox {
+        Button.label: 'One';
+        Button.label: 'Two';
+    }
+    is $vbox.obj.children.elems, 2, 'VBox has two children';
+}
+
+subtest 'Nested VBox works' => {
+    my $vbox = VBox {
+        VBox {
+            Button.label: 'Nested'
+        };
+    }
+    is $vbox.obj.children.elems, 1, 'Outer VBox has one child';
+    is $vbox.obj.children[0].children.elems, 1, 'Inner VBox has one child';
+    is $vbox.obj.children[0].children[0].label, 'Nested', 'Nested button correct';
+}
+
+subtest 'Border builder sets title and content' => {
+    my $border = Border(:title('Box')).content(Text(:text('Inside')));
+    ok $border ~~ Selkie::UI::BorderBuilder, 'Border builder works';
+    is $border.obj.title, 'Box', 'Border title set';
+    ok $border.obj.content ~~ Selkie::Widget::Text, 'Border content set';
+}
+
+subtest 'Modal builder wires content and close' => {
+    my $modal = Modal().content(Text(:text('Hello')));
+    ok $modal ~~ Selkie::UI::ModalBuilder, 'Modal builder works';
+    ok $modal.obj.content ~~ Selkie::Widget::Text, 'Modal content set';
+    my $result = $modal.on-close: -> $ { };
+    is $result, $modal, 'Modal on-close returns self';
+}
+
+subtest 'ScrollView builder adds child' => {
+    my $scroll = ScrollView().add(Text(:text('A')));
+    ok $scroll ~~ Selkie::UI::ScrollViewBuilder, 'ScrollView builder works';
+    is $scroll.obj.children.elems, 1, 'ScrollView has one child';
+}
+
+done-testing;

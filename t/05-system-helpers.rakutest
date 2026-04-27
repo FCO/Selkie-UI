@@ -1,0 +1,32 @@
+use Test;
+use Selkie::UI;
+use Selkie::Widget::TextInput;
+use Selkie::Widget::Text;
+
+subtest 'new-state is exported and callable' => {
+    ok &new-state ~~ Callable, 'new-state is exported and callable';
+}
+
+subtest 'FileBrowser builder builds modal' => {
+    my $browser = FileBrowser;
+    ok $browser.build(:start-dir($*HOME.Str)).defined, 'FileBrowser build returns modal';
+    ok $browser.modal.defined, 'FileBrowser modal built';
+}
+
+subtest 'HelpOverlay builder builds modal' => {
+    my $overlay = HelpOverlay(
+        :app(Selkie::Widget::HelpOverlay),
+        :focused-widget(Selkie::Widget::Text.new(text => 'x')),
+    );
+    ok $overlay.build.defined, 'HelpOverlay build returns modal';
+    ok $overlay.modal.defined, 'HelpOverlay modal built';
+}
+
+subtest 'PasswordStrength builder wires input' => {
+    my $input = Selkie::Widget::TextInput.new(placeholder => 'pw');
+    my $meter = PasswordStrength(:input($input));
+    ok $meter ~~ Selkie::UI::PasswordStrengthBuilder, 'PasswordStrength builder works';
+    ok $meter.score ~~ UInt, 'PasswordStrength score is UInt';
+}
+
+done-testing;

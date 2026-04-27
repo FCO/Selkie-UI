@@ -6,10 +6,18 @@ unit class Selkie::UI::TextInputBuilder is Selkie::UI::Base;
 
 has Str                       $.placeholder;
 has Sizing                    $.sizing;
-has Selkie::Widget::TextInput $.obj .= new: |(:$!placeholder with $!placeholder), |(:$!sizing with $!sizing);
+has Str                       $.mask-char;
+has Selkie::Widget::TextInput $.obj .= new: |(:$!placeholder with $!placeholder), |(:$!sizing with $!sizing), |(:$!mask-char with $!mask-char);
 
-method size(UInt $fixed = 1) {
-	$!obj.update-sizing: Sizing.fixed($fixed);
+multi method mask(Str :$char!) {
+	$!obj .= new: |(:$!placeholder with $!placeholder), |(:$!sizing with $!sizing), |(:$char with $char);
+	self
+}
+
+multi method mask(&mask-block) {
+	my %*UI-PATHS := SetHash.new;
+	$ = mask-block self;
+	$.auto-subscribe: "mask", { self.mask: mask-block self }
 	self
 }
 

@@ -25,32 +25,38 @@ subtest 'Button on-press returns self' => {
 subtest 'Button on-press fires when Enter pressed' => {
     my $btn = Button.label: 'Click Me';
     my $pressed = 0;
-    
+
     $btn.obj.on-press.tap: -> $_ { $pressed++ };
-    
+
     with-focus($btn.obj, {
         press-key($btn.obj, 'enter');
     });
-    
+
     is $pressed, 1, 'Button on-press fires when Enter key pressed';
 }
 
 subtest 'Button on-press fires when Space pressed' => {
     my $btn = Button.label: 'Click Me';
     my $pressed = 0;
-    
+
     $btn.obj.on-press.tap: -> $_ { $pressed++ };
-    
+
     with-focus($btn.obj, {
         press-key($btn.obj, 'space');
     });
-    
+
     is $pressed, 1, 'Button on-press fires when Space key pressed';
 }
 
 subtest 'Button builder sets on-press Supply' => {
     my $btn = Button.label: 'Click';
     ok $btn.obj.on-press ~~ Supply, 'on-press is a Supply';
+}
+
+subtest 'Button can change label after creation' => {
+    my $btn = Button.label: 'Initial';
+    $btn.label: 'Changed';
+    is $btn.obj.label, 'Changed', 'Label changed successfully';
 }
 
 subtest 'TextInput builder with placeholder' => {
@@ -80,39 +86,39 @@ subtest 'TextInput on-submit returns self' => {
 subtest 'TextInput on-submit fires when Enter pressed' => {
     my $input = TextInput(:placeholder('test'));
     my $submitted = 0;
-    
+
     $input.obj.on-submit.tap: -> $t { $submitted++ };
-    
+
     with-focus($input.obj, {
         type-text($input.obj, 'hello world');
         press-key($input.obj, 'enter');
     });
-    
+
     is $submitted, 1, 'on-submit fired once when Enter pressed';
 }
 
 subtest 'TextInput can type text' => {
     my $input = TextInput(:placeholder('test'));
-    
+
     with-focus($input.obj, {
         type-text($input.obj, 'abc');
     });
-    
+
     is $input.obj.text, 'abc', 'TextInput text set correctly';
 }
 
 subtest 'TextInput clear after submit works' => {
     my $input = TextInput(:placeholder('test'));
-    
-    $input.obj.on-submit.tap: -> $t { 
+
+    $input.obj.on-submit.tap: -> $t {
         $input.clear;
     };
-    
+
     with-focus($input.obj, {
         type-text($input.obj, 'test input');
         press-key($input.obj, 'enter');
     });
-    
+
     is $input.obj.text, '', 'Input cleared after submit';
 }
 
@@ -121,77 +127,28 @@ subtest 'TextInput builder sets on-submit Supply' => {
     ok $input.obj.on-submit ~~ Supply, 'on-submit is a Supply';
 }
 
-subtest 'TextStream builder exists' => {
-    my $stream = TextStream;
-    ok $stream ~~ Selkie::UI::TextStreamBuilder, 'TextStream builder works';
+subtest 'TextInput size with percent' => {
+    my $input = TextInput(:placeholder('x'));
+    $input.size(:percent(50));
+    is $input.obj.sizing.value, 50, 'Size percent set to 50';
 }
 
-subtest 'TextStream append method' => {
-    my $stream = TextStream;
-    my $result = $stream.append: 'Hello World';
-    is $result, $stream, 'append returns self for chaining';
+subtest 'TextInput size with flex' => {
+    my $input = TextInput(:placeholder('x'));
+    $input.size(:flex);
+    is $input.obj.sizing.value, 1, 'Size flex set to factor 1';
 }
 
-subtest 'Screen builder with VBox widget' => {
-    my $vbox = VBox {
-        Button.label: 'Test'
-    }
-    my $screen = Screen($vbox);
-    ok $screen ~~ Selkie::UI::ScreenBuilder, 'Screen builder works';
-    is $screen.name, 'main', 'Default name is main';
+subtest 'TextInput size with flex factor' => {
+    my $input = TextInput(:placeholder('x'));
+    $input.size(:flex(2));
+    is $input.obj.sizing.value, 2, 'Size flex set to factor 2';
 }
 
-subtest 'Screen builder with custom name' => {
-    my $vbox = VBox {
-        Button.label: 'Test'
-    }
-    my $screen = Screen($vbox, :name<settings>);
-    is $screen.name, 'settings', 'Custom name set';
-}
-
-subtest 'VBox builder with block syntax' => {
-    my $vbox = VBox {
-        Button.label: 'Test'
-    }
-    ok $vbox ~~ Selkie::UI::VBoxBuilder, 'VBox builder works';
-    is $vbox.obj.children.elems, 1, 'VBox has one child';
-    is $vbox.obj.children[0].label, 'Test', 'Button label correct';
-}
-
-subtest 'Builder chaining works' => {
-    my $input = TextInput(:placeholder('test'));
-    my $result = $input.size(2).on-submit: -> $, $_ { };
-    is $result, $input, 'Chained methods return self';
-    is $input.obj.sizing.value, 2, 'Size applied after chaining';
-}
-
-subtest 'new-state is exported and callable' => {
-    ok &new-state ~~ Callable, 'new-state is exported and callable';
-}
-
-subtest 'VBox with multiple children' => {
-    my $vbox = VBox {
-        Button.label: 'One';
-        Button.label: 'Two';
-    }
-    is $vbox.obj.children.elems, 2, 'VBox has two children';
-}
-
-subtest 'Nested VBox works' => {
-    my $vbox = VBox {
-        VBox {
-            Button.label: 'Nested'
-        };
-    }
-    is $vbox.obj.children.elems, 1, 'Outer VBox has one child';
-    is $vbox.obj.children[0].children.elems, 1, 'Inner VBox has one child';
-    is $vbox.obj.children[0].children[0].label, 'Nested', 'Nested button correct';
-}
-
-subtest 'Button can change label after creation' => {
-    my $btn = Button.label: 'Initial';
-    $btn.label: 'Changed';
-    is $btn.obj.label, 'Changed', 'Label changed successfully';
+subtest 'TextInput mask with char' => {
+    my $input = TextInput(:placeholder('x'));
+    my $result = $input.mask(:char('*'));
+    is $result, $input, 'mask returns self for chaining';
 }
 
 subtest 'TextInput size can be updated' => {
@@ -200,6 +157,13 @@ subtest 'TextInput size can be updated' => {
     is $input.obj.sizing.value, 5, 'Size updated to 5';
     $input.size(10);
     is $input.obj.sizing.value, 10, 'Size updated to 10';
+}
+
+subtest 'Builder chaining works' => {
+    my $input = TextInput(:placeholder('test'));
+    my $result = $input.size(2).on-submit: -> $, $_ { };
+    is $result, $input, 'Chained methods return self';
+    is $input.obj.sizing.value, 2, 'Size applied after chaining';
 }
 
 done-testing;

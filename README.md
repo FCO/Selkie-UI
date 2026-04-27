@@ -48,24 +48,65 @@ State Management
 
 `new-state` creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
 
+Block-Based Setters
+-------------------
+
+Many builder methods accept a block instead of a value. The block is evaluated once and the builder auto-subscribes to any state read inside it, re-running the setter when those states change. These reactive setters require an active `App` because auto-subscribe uses `$*UI-APP` and the store.
+
 Builders
 --------
 
-The module exports builder functions for all major Selkie primitives:
+The module exports builder functions for Selkie primitives. Each builder returns a chainable builder object that wraps the underlying widget.
+
+### Layout and Containers
 
   * `App` — Application entry point that initializes the UI and starts the event loop
 
   * `Screen` — Named screens that can be switched between
 
-  * `VBox` — Vertical layout container for stacking widgets
+  * `VBox`, `HBox`, `Split` — Layout containers for stacking or splitting widgets
+
+  * `Border`, `Modal`, `ScrollView` — Container and decorator widgets
+
+  * `CardList` — Scrollable list of variable-height widgets
+
+### Inputs and Selection
 
   * `Button` — Clickable button with label and press handler
 
-  * `TextStream` — Text display widget that updates reactively
+  * `TextInput`, `MultiLineInput` — Text input fields with submit handling
 
-  * `TextInput` — Text input field with submit handling
+  * `Checkbox`, `RadioGroup`, `Select` — Selection controls
 
-Each builder uses a block syntax where widget properties are configured via chained method calls.
+  * `ProgressBar` — Progress indicator
+
+### Text and Lists
+
+  * `Text`, `TextStream`, `RichText` — Text display widgets
+
+  * `ListView`, `Table`, `TabBar` — List and table widgets
+
+  * `Image`, `Spinner`, `Toast` — Media and status widgets
+
+### Overlays and Helpers
+
+  * `ConfirmModal` — Confirmation modal builder
+
+  * `CommandPalette` — Fuzzy command launcher
+
+  * `FileBrowser` — File picker modal
+
+  * `HelpOverlay` — Contextual keybind help
+
+  * `PasswordStrength` — Password strength meter
+
+### Charts
+
+  * `Plot`, `BarChart`, `LineChart`, `ScatterPlot` — Chart widgets
+
+  * `Sparkline`, `Heatmap`, `Histogram` — Inline and grid charts
+
+  * `Axis`, `Legend` — Chart adornments
 
 Examples
 --------
@@ -91,19 +132,7 @@ App {
 }
 ```
 
-The `App` block is the entry point that initializes the application.
-
-The `new-state` function creates a reactive state variable bound with `:=`, initialized as an empty string.
-
-The `VBox` widget arranges its children vertically from top to bottom.
-
-`TextStream.append` with a block argument reactively displays the value of `$next-msg` and updates whenever it changes.
-
-`TextInput` creates a single-line text input with a placeholder hint.
-
-`.size(1)` constrains the input to a fixed height of one row.
-
-`.on-submit` registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
+The `App` block is the entry point that initializes the application. The `new-state` function creates a reactive state variable bound with `:=`, initialized as an empty string. The `VBox` widget arranges its children vertically from top to bottom. `TextStream.append` with a block argument reactively displays the value of `$next-msg` and updates whenever it changes. `TextInput` creates a single-line text input with a placeholder hint. `.size(1)` constrains the input to a fixed height of one row. `.on-submit` registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
 
 ![](./text.gif)
 
@@ -125,15 +154,25 @@ App {
 }
 ```
 
-The `App` block is the entry point that initializes the application.
-
-The `new-state` function creates a reactive state variable bound with `:=`, initialized as zero.
-
-The `VBox` widget arranges its children vertically.
-
-`Button.label` with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val".
-
-`.on-press` registers a handler that runs when the user clicks the button. The handler increments the counter with `++$val`, triggering a UI update.
+The `App` block is the entry point that initializes the application. The `new-state` function creates a reactive state variable bound with `:=`, initialized as zero. The `VBox` widget arranges its children vertically. `Button.label` with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val". `.on-press` registers a handler that runs when the user clicks the button. The handler increments the counter with `++$val`, triggering a UI update.
 
 ![](./test.gif)
+
+### ListView with reactive items
+
+This example binds a list view to a reactive array. When the array changes, the list updates automatically.
+
+```raku
+use Selkie::UI;
+
+App {
+    my $items := new-state <One Two Three>;
+    VBox {
+        ListView.set-items: { $items };
+        Button.label('Refresh').on-press: {
+            $items = <One Two Three Four>
+        }
+    }
+}
+```
 

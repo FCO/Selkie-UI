@@ -1,0 +1,164 @@
+unit class Selkie::UI;
+
+=begin pod
+
+=NAME Selkie::UI
+=TITLE UI Builder Abstractions for Selkie
+
+=NOTE This module is under active development. API may change.
+
+=SYNOPSIS
+
+=begin code :lang<raku>
+
+use Selkie::UI;
+
+App {
+    Screen :name<main>, {
+        VBox {
+            Button.label: "Click me"
+        }
+    }
+}
+
+=end code
+
+=DESCRIPTION
+
+Selkie::UI provides a Raku-native DSL for building terminal user interfaces using the Selkie framework. Unlike traditional imperative UI code where you manually manage rendering and event loops, this module offers a declarative approach—your code describes B<what> the UI should look like and do, not B<how> to achieve it step-by-step.
+
+Widgets are declared hierarchically using block syntax, with properties and handlers specified via chained method calls. This makes UI definitions intuitive, compositional, and easy to reason about—whether you're building simple tools or complex applications.
+
+The DSL handles the glue between your declarative definitions and Selkie's imperative runtime, including state management with automatic UI updates when reactive variables change.
+
+=head2 State Management
+
+C<new-state> creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
+
+=head2 Block-Based Setters
+
+Many builder methods accept a block instead of a value. The block is evaluated once and the builder auto-subscribes to any state read inside it, re-running the setter when those states change. These reactive setters require an active C<App> because auto-subscribe uses C<$*UI-APP> and the store.
+
+=head2 Builders
+
+The module exports builder functions for Selkie primitives. Each builder returns a chainable builder object that wraps the underlying widget.
+
+=head3 Layout and Containers
+
+=item C<App> — Application entry point that initializes the UI and starts the event loop
+=item C<Screen> — Named screens that can be switched between
+=item C<VBox>, C<HBox>, C<Split> — Layout containers for stacking or splitting widgets
+=item C<Border>, C<Modal>, C<ScrollView> — Container and decorator widgets
+=item C<CardList> — Scrollable list of variable-height widgets
+
+=head3 Inputs and Selection
+
+=item C<Button> — Clickable button with label and press handler
+=item C<TextInput>, C<MultiLineInput> — Text input fields with submit handling
+=item C<Checkbox>, C<RadioGroup>, C<Select> — Selection controls
+=item C<ProgressBar> — Progress indicator
+
+=head3 Text and Lists
+
+=item C<Text>, C<TextStream>, C<RichText> — Text display widgets
+=item C<ListView>, C<Table>, C<TabBar> — List and table widgets
+=item C<Image>, C<Spinner>, C<Toast> — Media and status widgets
+
+=head3 Overlays and Helpers
+
+=item C<ConfirmModal> — Confirmation modal builder
+=item C<CommandPalette> — Fuzzy command launcher
+=item C<FileBrowser> — File picker modal
+=item C<HelpOverlay> — Contextual keybind help
+=item C<PasswordStrength> — Password strength meter
+
+=head3 Charts
+
+=item C<Plot>, C<BarChart>, C<LineChart>, C<ScatterPlot> — Chart widgets
+=item C<Sparkline>, C<Heatmap>, C<Histogram> — Inline and grid charts
+=item C<Axis>, C<Legend> — Chart adornments
+
+=head2 Examples
+
+=head3 Text input with reactive display
+
+This example creates a text input field that echoes user input to a text stream above it.
+
+The program creates a reactive string variable with C<new-state>, places a vertical box layout on screen, adds a text stream widget to display messages, and adds a text input widget. When the user types and presses Enter, the input text is stored in the reactive variable, which automatically updates the text stream, and the input field is cleared for the next entry.
+
+=begin code :lang<raku>
+
+use Selkie::UI;
+
+App {
+    my $next-msg := new-state Str;
+    VBox {
+        TextStream.append: { $next-msg };
+        TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
+            $next-msg = $text;
+            $input.clear
+        }
+    }
+}
+
+=end code
+
+The C<App> block is the entry point that initializes the application.
+The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as an empty string.
+The C<VBox> widget arranges its children vertically from top to bottom.
+C<TextStream.append> with a block argument reactively displays the value of C<$next-msg> and updates whenever it changes.
+C<TextInput> creates a single-line text input with a placeholder hint.
+C<.size(1)> constrains the input to a fixed height of one row.
+C<.on-submit> registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
+
+![](./text.gif)
+
+=head3 Button with reactive state
+
+This example shows a button whose label changes based on a numeric state variable.
+
+The program creates a reactive integer counter, places it in a vertical box, and displays a button. The button label is computed from the counter value using a block—when the counter changes, the label automatically re-renders. Each button press increments the counter, updating both the counter value and the button label.
+
+=begin code :lang<raku>
+
+use Selkie::UI;
+
+App {
+    my UInt $val := new-state 0;
+    VBox {
+        Button.label({ $val ?? "BLE $val" !! "BLA $val" })
+            .on-press: { ++$val }
+    }
+}
+
+=end code
+
+The C<App> block is the entry point that initializes the application.
+The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as zero.
+The C<VBox> widget arranges its children vertically.
+C<Button.label> with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val".
+C<.on-press> registers a handler that runs when the user clicks the button. The handler increments the counter with C<++$val>, triggering a UI update.
+
+![](./test.gif)
+
+=head3 ListView with reactive items
+
+This example binds a list view to a reactive array. When the array changes, the list updates automatically.
+
+=begin code :lang<raku>
+
+use Selkie::UI;
+
+App {
+    my $items := new-state <One Two Three>;
+    VBox {
+        ListView.set-items: { $items };
+        Button.label('Refresh').on-press: {
+            $items = <One Two Three Four>
+        }
+    }
+}
+
+=end code
+
+=end pod

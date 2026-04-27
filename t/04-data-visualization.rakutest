@@ -1,0 +1,58 @@
+use Test;
+use Selkie::UI;
+
+subtest 'Plot builder push sample' => {
+    my $plot = Plot(:type('uint'), :min-y(0), :max-y(10));
+    my $result = $plot.push-sample(0, 5);
+    is $result, $plot, 'Plot push-sample returns self';
+}
+
+subtest 'BarChart builder sets data' => {
+    my $chart = BarChart(:data([{ label => 'A', value => 1 }]));
+    ok $chart ~~ Selkie::UI::BarChartBuilder, 'BarChart builder works';
+    is $chart.obj.data.elems, 1, 'BarChart data set';
+}
+
+subtest 'LineChart builder sets series' => {
+    my $chart = LineChart(:series([{ label => 'A', values => [1,2] }]));
+    ok $chart ~~ Selkie::UI::LineChartBuilder, 'LineChart builder works';
+    is $chart.obj.series.elems, 1, 'LineChart series set';
+}
+
+subtest 'ScatterPlot builder sets series' => {
+    my $chart = ScatterPlot(:series([{ label => 'A', points => [(1 => 2)] }]));
+    ok $chart ~~ Selkie::UI::ScatterPlotBuilder, 'ScatterPlot builder works';
+    is $chart.obj.series.elems, 1, 'ScatterPlot series set';
+}
+
+subtest 'Sparkline builder sets data' => {
+    my $spark = Sparkline(:data([1,2,3]));
+    ok $spark ~~ Selkie::UI::SparklineBuilder, 'Sparkline builder works';
+    is $spark.obj.data.elems, 3, 'Sparkline data set';
+}
+
+subtest 'Heatmap builder sets data' => {
+    my $heat = Heatmap(:data([[1,2],[3,4]]));
+    ok $heat ~~ Selkie::UI::HeatmapBuilder, 'Heatmap builder works';
+    is $heat.obj.data.elems, 2, 'Heatmap data set';
+}
+
+subtest 'Histogram builder sets values' => {
+    my $hist = Histogram(:values([1,2,3]), :bins(2));
+    ok $hist ~~ Selkie::UI::HistogramBuilder, 'Histogram builder works';
+    is $hist.obj.values.elems, 3, 'Histogram values set';
+}
+
+subtest 'Axis builder reserved sizes' => {
+    my $axis = Axis(:min(0), :max(10), :edge('bottom'));
+    ok $axis ~~ Selkie::UI::AxisBuilder, 'Axis builder works';
+    is $axis.reserved-rows, 2, 'Axis reserved rows returns 2 for bottom';
+}
+
+subtest 'Legend builder sets series' => {
+    my $legend = Legend(:series([{ label => 'A', color => 0xFFFFFF }]));
+    ok $legend ~~ Selkie::UI::LegendBuilder, 'Legend builder works';
+    is $legend.obj.series.elems, 1, 'Legend series set';
+}
+
+done-testing;

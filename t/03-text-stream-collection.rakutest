@@ -1,0 +1,122 @@
+use Test;
+use Selkie::UI;
+use Selkie::Widget::Text;
+
+subtest 'TextStream builder exists' => {
+    my $stream = TextStream;
+    ok $stream ~~ Selkie::UI::TextStreamBuilder, 'TextStream builder works';
+}
+
+subtest 'TextStream append method' => {
+    my $stream = TextStream;
+    my $result = $stream.append: 'Hello World';
+    is $result, $stream, 'append returns self for chaining';
+}
+
+subtest 'Text builder exists' => {
+    my $text = Text(:text('Hello'));
+    ok $text ~~ Selkie::UI::TextBuilder, 'Text builder works';
+    is $text.obj.text, 'Hello', 'Text content set';
+}
+
+subtest 'Text builder with text method' => {
+    my $text = Text;
+    $text.text: 'Updated';
+    is $text.obj.text, 'Updated', 'Text updated via method';
+}
+
+subtest 'Toast builder can show message' => {
+    my $toast = Toast;
+    my $result = $toast.show('Saved');
+    is $result, $toast, 'Toast show returns self';
+    is $toast.obj.message, 'Saved', 'Toast message set';
+}
+
+subtest 'Spinner builder tick/reset chain' => {
+    my $spinner = Spinner;
+    is $spinner.tick, $spinner, 'Spinner tick returns self';
+    is $spinner.reset, $spinner, 'Spinner reset returns self';
+}
+
+subtest 'Image builder sets file' => {
+    my $img = Image;
+    $img.file('demo.png');
+    ok $img ~~ Selkie::UI::ImageBuilder, 'Image builder works';
+    is $img.obj.file, 'demo.png', 'Image file set';
+}
+
+subtest 'Table builder adds column and rows' => {
+    my $table = Table;
+    $table.add-column(:name<id>, :label('ID'))
+        .rows([{ id => 1 }, { id => 2 }]);
+    ok $table ~~ Selkie::UI::TableBuilder, 'Table builder works';
+    is $table.obj.columns.elems, 1, 'Table column added';
+    is $table.obj.rows.elems, 2, 'Table rows set';
+}
+
+subtest 'TabBar builder adds tabs' => {
+    my $tabs = TabBar;
+    $tabs.add-tab(:name<one>, :label('One'))
+        .add-tab(:name<two>, :label('Two'));
+    ok $tabs ~~ Selkie::UI::TabBarBuilder, 'TabBar builder works';
+    is $tabs.obj.tab-names.elems, 2, 'TabBar tabs added';
+}
+
+subtest 'CommandPalette builder registers commands' => {
+    my $palette = CommandPalette;
+    $palette.add-command(-> { }, :label('Run'));
+    ok $palette ~~ Selkie::UI::CommandPaletteBuilder, 'CommandPalette builder works';
+    ok $palette.build.defined, 'CommandPalette build returns modal';
+}
+
+subtest 'CommandPalette commands accepts pairs' => {
+    my $palette = CommandPalette;
+    $palette.commands([
+        'Run' => -> { },
+        'Stop' => -> { },
+    ]);
+    ok $palette ~~ Selkie::UI::CommandPaletteBuilder, 'CommandPalette commands works';
+}
+
+subtest 'Checkbox check accepts block' => {
+    my $check = Checkbox(:label('Demo'));
+    my $state = True;
+    my $result = $check.check: $state;
+    is $result, $check, 'Checkbox check returns self';
+}
+
+subtest 'CardList builder add item' => {
+    my $cards = CardList;
+    my $inner = Text(:text('Item'));
+    my $root = Border().content($inner);
+    $cards.add-item($inner, :root($root), :height(3));
+    ok $cards ~~ Selkie::UI::CardListBuilder, 'CardList builder works';
+    is $cards.obj.count, 1, 'CardList item added';
+}
+
+subtest 'CardList builder set-items with hash list' => {
+    my $cards = CardList;
+    my $inner = Text(:text('Item'));
+    my $root = Border().content($inner);
+    $cards.set-items([
+        { widget => $inner.obj, root => $root.obj, height => 2 },
+    ]);
+    is $cards.obj.count, 1, 'CardList set-items adds items';
+}
+
+subtest 'RichText builder sets content' => {
+    my $rich = RichText;
+    my $span = Selkie::Widget::RichText::Span.new(text => 'Hi');
+    $rich.content([$span]);
+    ok $rich ~~ Selkie::UI::RichTextBuilder, 'RichText builder works';
+    is $rich.obj.spans.elems, 1, 'RichText content set';
+}
+
+subtest 'MultiLineInput builder sets text' => {
+    my $multi = MultiLineInput(:placeholder('Type'));
+    $multi.text('abc');
+    ok $multi ~~ Selkie::UI::MultiLineInputBuilder, 'MultiLineInput builder works';
+    is $multi.obj.text, 'abc', 'MultiLineInput text set';
+}
+
+done-testing;
