@@ -1,6 +1,4 @@
 use Selkie::UI;
-
-use Selkie::UI;
 App {
 	VBox {
 		my $stream = TextStream;
