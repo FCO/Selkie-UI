@@ -6,13 +6,22 @@
   "build-depends": [
   ],
   "depends": [
+    "Selkie",
+    "UUID"
   ],
   "description": "blah blah blah",
   "license": "Artistic-2.0",
   "name": "Selkie::UI",
   "perl": "6.d",
   "provides": {
-    "Selkie::UI": "lib/Selkie/UI.rakumod"
+    "Selkie::UI": "lib/Selkie/UI.rakumod",
+    "Selkie::UI::AppBuilder": "lib/Selkie/UI/AppBuilder.rakumod",
+    "Selkie::UI::Base": "lib/Selkie/UI/Base.rakumod",
+    "Selkie::UI::ButtonBuilder": "lib/Selkie/UI/ButtonBuilder.rakumod",
+    "Selkie::UI::ScreenBuilder": "lib/Selkie/UI/ScreenBuilder.rakumod",
+    "Selkie::UI::TextInputBuilder": "lib/Selkie/UI/TextInputBuilder.rakumod",
+    "Selkie::UI::TextStreamBuilder": "lib/Selkie/UI/TextStreamBuilder.rakumod",
+    "Selkie::UI::VBoxBuilder": "lib/Selkie/UI/VBoxBuilder.rakumod"
   },
   "resources": [
   ],
