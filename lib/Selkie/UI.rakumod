@@ -10,7 +10,7 @@ use UUID;
 
 my %states;
 sub new-state(
-	$default?,
+	$default,
 	:$name  = UUID.new.Str,
 	:$event = "ui/automatic/{ $name }/update",
 ) is rw is export {
@@ -22,15 +22,15 @@ sub new-state(
 		:db{ $name => %ev<value> }
 	}
 
-	with $default -> $value {
+	given $default -> $value {
 		$store.dispatch: $event, :$value;
 		$store.tick;
 	}
 
-	Proxy.new(
+	return-rw Proxy.new(
 		FETCH => sub ($) {
 			.{$name} = True with %*UI-PATHS;
-			$store.get-in: $name
+			try $store.get-in: $name
 		},
 		STORE => sub ($, $value) {
 			$store.dispatch: $event, :$value;
@@ -134,7 +134,7 @@ class ButtonBuilder is UI {
 
 	multi method label(&label) {
 		my %*UI-PATHS := SetHash.new;
-		my Str() $label = label self;
+		$ = label self;
 		$.auto-subscribe: "label", { self.label: label self }
 		self
 	}
@@ -150,13 +150,15 @@ sub Button(:$label) is export { ButtonBuilder.new: |(:$label with $label) }
 class TextStreamBuilder is UI {
 	has Selkie::Widget::TextStream $.obj .= new;
 
-	multi method append(Str() $text) {
-		$!obj.append: $text;
+	multi method append(&text) {
+		my %*UI-PATHS := SetHash.new;
+		$ = text self;
+		$.auto-subscribe: "append", { self.append: text self }
 		self
 	}
 
-	multi method append(&text) {
-		$.auto-subscribe: "label", { self.append: text self }
+	multi method append(Str() $text) {
+		$!obj.append: $text with $text;
 		self
 	}
 }

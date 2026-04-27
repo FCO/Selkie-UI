@@ -1,10 +1,11 @@
 use Selkie::UI;
 App {
+	my $next-msg := new-state Str;
 	VBox {
-		my $stream = TextStream;
-		TextInput(:placeholder('Type here...')).size.on-submit: -> $_, $text {
-			$stream.append: $text;
-			.clear
+		TextStream.append: { $next-msg };
+		TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
+			$next-msg = $text;
+			$input.clear
 		}
 	}
 }
