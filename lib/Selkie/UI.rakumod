@@ -74,11 +74,17 @@ App {
 =end code
 
 The C<App> block is the entry point that initializes the application.
+
 The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as an empty string.
+
 The C<VBox> widget arranges its children vertically from top to bottom.
+
 C<TextStream.append> with a block argument reactively displays the value of C<$next-msg> and updates whenever it changes.
+
 C<TextInput> creates a single-line text input with a placeholder hint.
+
 C<.size(1)> constrains the input to a fixed height of one row.
+
 C<.on-submit> registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
 
 ![](./text.gif)
@@ -104,9 +110,13 @@ App {
 =end code
 
 The C<App> block is the entry point that initializes the application.
+
 The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as zero.
+
 The C<VBox> widget arranges its children vertically.
+
 C<Button.label> with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val".
+
 C<.on-press> registers a handler that runs when the user clicks the button. The handler increments the counter with C<++$val>, triggering a UI update.
 
 ![](./test.gif)

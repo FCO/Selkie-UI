@@ -91,7 +91,19 @@ App {
 }
 ```
 
-The `App` block is the entry point that initializes the application. The `new-state` function creates a reactive state variable bound with `:=`, initialized as an empty string. The `VBox` widget arranges its children vertically from top to bottom. `TextStream.append` with a block argument reactively displays the value of `$next-msg` and updates whenever it changes. `TextInput` creates a single-line text input with a placeholder hint. `.size(1)` constrains the input to a fixed height of one row. `.on-submit` registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
+The `App` block is the entry point that initializes the application.
+
+The `new-state` function creates a reactive state variable bound with `:=`, initialized as an empty string.
+
+The `VBox` widget arranges its children vertically from top to bottom.
+
+`TextStream.append` with a block argument reactively displays the value of `$next-msg` and updates whenever it changes.
+
+`TextInput` creates a single-line text input with a placeholder hint.
+
+`.size(1)` constrains the input to a fixed height of one row.
+
+`.on-submit` registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
 
 ![](./text.gif)
 
@@ -113,7 +125,15 @@ App {
 }
 ```
 
-The `App` block is the entry point that initializes the application. The `new-state` function creates a reactive state variable bound with `:=`, initialized as zero. The `VBox` widget arranges its children vertically. `Button.label` with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val". `.on-press` registers a handler that runs when the user clicks the button. The handler increments the counter with `++$val`, triggering a UI update.
+The `App` block is the entry point that initializes the application.
+
+The `new-state` function creates a reactive state variable bound with `:=`, initialized as zero.
+
+The `VBox` widget arranges its children vertically.
+
+`Button.label` with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val".
+
+`.on-press` registers a handler that runs when the user clicks the button. The handler increments the counter with `++$val`, triggering a UI update.
 
 ![](./test.gif)
 
