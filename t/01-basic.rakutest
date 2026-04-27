@@ -1,6 +1,205 @@
 use Test;
 use Selkie::UI;
+use Selkie::Widget::Button;
+use Selkie::Widget::TextInput;
+use Selkie::Test::Keys;
+use Selkie::Test::Focus;
 
-pass "replace me";
+subtest 'Button builder with string label' => {
+    my $btn = Button.label: 'Click Me';
+    ok $btn ~~ Selkie::UI::ButtonBuilder, 'Button builder works';
+    is $btn.obj.label, 'Click Me', 'Label set correctly';
+}
+
+subtest 'Button builder with empty label' => {
+    my $btn = Button;
+    is $btn.obj.label, '', 'Default label is empty';
+}
+
+subtest 'Button on-press returns self' => {
+    my $btn = Button.label: 'Test';
+    my $result = $btn.on-press: -> $ { };
+    is $result, $btn, 'on-press returns self';
+}
+
+subtest 'Button on-press fires when Enter pressed' => {
+    my $btn = Button.label: 'Click Me';
+    my $pressed = 0;
+    
+    $btn.obj.on-press.tap: -> $_ { $pressed++ };
+    
+    with-focus($btn.obj, {
+        press-key($btn.obj, 'enter');
+    });
+    
+    is $pressed, 1, 'Button on-press fires when Enter key pressed';
+}
+
+subtest 'Button on-press fires when Space pressed' => {
+    my $btn = Button.label: 'Click Me';
+    my $pressed = 0;
+    
+    $btn.obj.on-press.tap: -> $_ { $pressed++ };
+    
+    with-focus($btn.obj, {
+        press-key($btn.obj, 'space');
+    });
+    
+    is $pressed, 1, 'Button on-press fires when Space key pressed';
+}
+
+subtest 'Button builder sets on-press Supply' => {
+    my $btn = Button.label: 'Click';
+    ok $btn.obj.on-press ~~ Supply, 'on-press is a Supply';
+}
+
+subtest 'TextInput builder with placeholder' => {
+    my $input = TextInput(:placeholder('Enter text'));
+    ok $input ~~ Selkie::UI::TextInputBuilder, 'TextInput builder works';
+    is $input.obj.placeholder, 'Enter text', 'Placeholder set';
+}
+
+subtest 'TextInput size method' => {
+    my $input = TextInput(:placeholder('x'));
+    $input.size(3);
+    is $input.obj.sizing.value, 3, 'Size set correctly';
+}
+
+subtest 'TextInput clear method' => {
+    my $input = TextInput(:placeholder('test'));
+    $input.clear;
+    is $input.obj.text, '', 'Input cleared';
+}
+
+subtest 'TextInput on-submit returns self' => {
+    my $input = TextInput(:placeholder('x'));
+    my $result = $input.on-submit: -> $, $_ { };
+    is $result, $input, 'on-submit returns self';
+}
+
+subtest 'TextInput on-submit fires when Enter pressed' => {
+    my $input = TextInput(:placeholder('test'));
+    my $submitted = 0;
+    
+    $input.obj.on-submit.tap: -> $t { $submitted++ };
+    
+    with-focus($input.obj, {
+        type-text($input.obj, 'hello world');
+        press-key($input.obj, 'enter');
+    });
+    
+    is $submitted, 1, 'on-submit fired once when Enter pressed';
+}
+
+subtest 'TextInput can type text' => {
+    my $input = TextInput(:placeholder('test'));
+    
+    with-focus($input.obj, {
+        type-text($input.obj, 'abc');
+    });
+    
+    is $input.obj.text, 'abc', 'TextInput text set correctly';
+}
+
+subtest 'TextInput clear after submit works' => {
+    my $input = TextInput(:placeholder('test'));
+    
+    $input.obj.on-submit.tap: -> $t { 
+        $input.clear;
+    };
+    
+    with-focus($input.obj, {
+        type-text($input.obj, 'test input');
+        press-key($input.obj, 'enter');
+    });
+    
+    is $input.obj.text, '', 'Input cleared after submit';
+}
+
+subtest 'TextInput builder sets on-submit Supply' => {
+    my $input = TextInput(:placeholder('test'));
+    ok $input.obj.on-submit ~~ Supply, 'on-submit is a Supply';
+}
+
+subtest 'TextStream builder exists' => {
+    my $stream = TextStream;
+    ok $stream ~~ Selkie::UI::TextStreamBuilder, 'TextStream builder works';
+}
+
+subtest 'TextStream append method' => {
+    my $stream = TextStream;
+    my $result = $stream.append: 'Hello World';
+    is $result, $stream, 'append returns self for chaining';
+}
+
+subtest 'Screen builder with VBox widget' => {
+    my $vbox = VBox {
+        Button.label: 'Test'
+    }
+    my $screen = Screen($vbox);
+    ok $screen ~~ Selkie::UI::ScreenBuilder, 'Screen builder works';
+    is $screen.name, 'main', 'Default name is main';
+}
+
+subtest 'Screen builder with custom name' => {
+    my $vbox = VBox {
+        Button.label: 'Test'
+    }
+    my $screen = Screen($vbox, :name<settings>);
+    is $screen.name, 'settings', 'Custom name set';
+}
+
+subtest 'VBox builder with block syntax' => {
+    my $vbox = VBox {
+        Button.label: 'Test'
+    }
+    ok $vbox ~~ Selkie::UI::VBoxBuilder, 'VBox builder works';
+    is $vbox.obj.children.elems, 1, 'VBox has one child';
+    is $vbox.obj.children[0].label, 'Test', 'Button label correct';
+}
+
+subtest 'Builder chaining works' => {
+    my $input = TextInput(:placeholder('test'));
+    my $result = $input.size(2).on-submit: -> $, $_ { };
+    is $result, $input, 'Chained methods return self';
+    is $input.obj.sizing.value, 2, 'Size applied after chaining';
+}
+
+subtest 'new-state is exported and callable' => {
+    ok &new-state ~~ Callable, 'new-state is exported and callable';
+}
+
+subtest 'VBox with multiple children' => {
+    my $vbox = VBox {
+        Button.label: 'One';
+        Button.label: 'Two';
+    }
+    is $vbox.obj.children.elems, 2, 'VBox has two children';
+}
+
+subtest 'Nested VBox works' => {
+    my $vbox = VBox {
+        VBox {
+            Button.label: 'Nested'
+        };
+    }
+    is $vbox.obj.children.elems, 1, 'Outer VBox has one child';
+    is $vbox.obj.children[0].children.elems, 1, 'Inner VBox has one child';
+    is $vbox.obj.children[0].children[0].label, 'Nested', 'Nested button correct';
+}
+
+subtest 'Button can change label after creation' => {
+    my $btn = Button.label: 'Initial';
+    $btn.label: 'Changed';
+    is $btn.obj.label, 'Changed', 'Label changed successfully';
+}
+
+subtest 'TextInput size can be updated' => {
+    my $input = TextInput(:placeholder('test'));
+    $input.size(5);
+    is $input.obj.sizing.value, 5, 'Size updated to 5';
+    $input.size(10);
+    is $input.obj.sizing.value, 10, 'Size updated to 10';
+}
 
 done-testing;
