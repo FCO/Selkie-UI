@@ -82,12 +82,12 @@ This example creates a text input field that echoes user input to a text stream 
 ```raku
 use Selkie::UI;
 App {
-	my $next-msg := new-state Str;        # Reactive variable, starts empty
-	VBox {                                 # Vertical layout container
+	my $next-msg := new-state Str;             # Reactive variable, starts empty
+	VBox {                                     # Vertical layout container
 		TextStream.append: { $next-msg };  # Displays $next-msg, auto-updates when it changes
 		TextInput(:placeholder('Type here...')).size(1).on-submit: -> $input, $text {
-			$next-msg = $text;              # Update state with submitted text
-			$input.clear                    # Clear the input field for next entry
+			$next-msg = $text;         # Update state with submitted text
+			$input.clear               # Clear the input field for next entry
 		}
 	}
 }
@@ -103,10 +103,10 @@ This example shows a button whose label changes based on a numeric state variabl
 use Selkie::UI;
 
 App {
-	my UInt $val := new-state 0;                                   # Reactive counter, starts at 0
+	my UInt $val := new-state 0;                               # Reactive counter, starts at 0
 	VBox {
-		Button.label({ $val ?? "BLE $val" !! "BLA $val" })        # Label shows "BLA 0" then "BLE 1", etc.
-			.on-press: { ++$val }                                  # Increment counter when clicked
+		Button.label({ $val ?? "BLE $val" !! "BLA $val" }) # Label shows "BLA 0" then "BLE 1", etc.
+			.on-press: { ++$val }                      # Increment counter when clicked
 	}
 }
 ```
