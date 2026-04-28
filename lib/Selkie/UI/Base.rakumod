@@ -1,4 +1,5 @@
 use Selkie::Sizing;
+use Selkie::Style;
 
 unit class Selkie::UI::Base;
 
@@ -18,6 +19,16 @@ method auto-subscribe($method, &block) {
 		}
 	}
 	block self
+}
+
+method style(|c) {
+	my $style = Selkie::Style.new: |c.hash;
+	if $.obj.^can('set-style') {
+		$.obj.set-style($style);
+	} elsif $.obj.^can('style') {
+		try { $.obj.style = $style };
+	}
+	self
 }
 
 multi method size(UInt $fixed!) {

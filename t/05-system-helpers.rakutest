@@ -7,6 +7,14 @@ subtest 'new-state is exported and callable' => {
     ok &new-state ~~ Callable, 'new-state is exported and callable';
 }
 
+subtest 'app helper subs are exported' => {
+    ok &OnFrame ~~ Callable, 'OnFrame is exported';
+    ok &OnKey ~~ Callable, 'OnKey is exported';
+    ok &Dispatch ~~ Callable, 'Dispatch is exported';
+    ok &Tick ~~ Callable, 'Tick is exported';
+    ok &Quit ~~ Callable, 'Quit is exported';
+}
+
 subtest 'FileBrowser builder builds modal' => {
     my $browser = FileBrowser;
     ok $browser.build(:start-dir($*HOME.Str)).defined, 'FileBrowser build returns modal';

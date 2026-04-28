@@ -113,114 +113,271 @@ sub new-state(
 	)
 }
 
-multi Screen(&block, Str :$name = "main") is export {
+sub Handler(Str() $name, &block) is export {
+	$*UI-APP.obj.store.register-handler($name, -> $st, %ev { block $*UI-APP, %ev })
+}
+
+multi Screen(&block, Str :$name = "main", |c) is export {
 	my @*UI-NODES;
 	block $*UI-APP;
-	ScreenBuilder.new: :$name, :screen(@*UI-NODES.head)
+	ScreenBuilder.new: :$name, :screen(@*UI-NODES.head), |c
 }
 
-multi Screen($node, Str :$name = "main") is export {
-	ScreenBuilder.new: :$name, :screen($node)
+multi Screen($node, Str :$name = "main", |c) is export {
+	ScreenBuilder.new: :$name, :screen($node), |c
 }
 
-sub App(&block) is export { AppBuilder.new(:&block).run }
+sub App(&block, |c) is export { AppBuilder.new(:&block, |c).run }
 
-sub VBox(&block) is export { VBoxBuilder.new: :&block }
+sub OnFrame(&block) is export {
+	$*UI-APP.obj.on-frame(&block)
+}
 
-sub HBox(&block) is export { HBoxBuilder.new: :&block }
+sub OnKey(Str:D $spec, &handler, Str :$screen) is export {
+	$*UI-APP.obj.on-key($spec, &handler, |(:$screen with $screen))
+}
 
-sub Split(&block) is export { SplitBuilder.new: :&block }
+sub Dispatch($event, *%payload) is export {
+	$*UI-APP.obj.store.dispatch($event, |%payload)
+}
 
-sub Button(:$label) is export { ButtonBuilder.new: |(:$label with $label) }
+sub Tick is export {
+	$*UI-APP.obj.store.tick
+}
 
-sub Text(:$text) is export { TextBuilder.new: |(:$text with $text) }
+sub Quit is export {
+	$*UI-APP.obj.quit
+}
 
-sub TextStream(:$placeholder) is export { TextStreamBuilder.new: |(:$placeholder with $placeholder) }
+sub VBox(&block, :$size, :$style, |c) is export {
+	my $builder = VBoxBuilder.new: :&block, |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub TextInput(:$placeholder) is export { TextInputBuilder.new: :$placeholder }
+sub HBox(&block, :$size, :$style, |c) is export {
+	my $builder = HBoxBuilder.new: :&block, |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub Checkbox(:$label) is export { CheckboxBuilder.new: |(:$label with $label) }
+sub Split(&block, :$size, :$style, |c) is export {
+	my $builder = SplitBuilder.new: :&block, |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub RadioGroup is export { RadioGroupBuilder.new }
+sub Button(:$label, :$size, :$style, |c) is export {
+	my $builder = ButtonBuilder.new: |(:$label with $label), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub Select is export { SelectBuilder.new }
+sub Text(:$text, :$size, :$style, |c) is export {
+	my $builder = TextBuilder.new: |(:$text with $text), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub ProgressBar is export { ProgressBarBuilder.new }
+sub TextStream(:$placeholder, :$size, :$style, |c) is export {
+	my $builder = TextStreamBuilder.new: |(:$placeholder with $placeholder), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub ListView is export { ListViewBuilder.new }
+sub TextInput(:$placeholder, :$size, :$style, |c) is export {
+	my $builder = TextInputBuilder.new: :$placeholder, |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub Border(:$title, :$hide-top-border, :$hide-bottom-border) is export {
-	BorderBuilder.new:
+sub Checkbox(:$label, :$size, :$style, |c) is export {
+	my $builder = CheckboxBuilder.new: |(:$label with $label), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
+
+sub RadioGroup(:$size, :$style, |c) is export {
+	my $builder = RadioGroupBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
+
+sub Select(:$size, :$style, |c) is export {
+	my $builder = SelectBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
+
+sub ProgressBar(:$size, :$style, |c) is export {
+	my $builder = ProgressBarBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
+
+sub ListView(:$size, :$style, |c) is export {
+	my $builder = ListViewBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
+
+sub Border(:$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c) is export {
+	my $builder = BorderBuilder.new:
 		|(:$title with $title),
 		|(:$hide-top-border with $hide-top-border),
-		|(:$hide-bottom-border with $hide-bottom-border)
+		|(:$hide-bottom-border with $hide-bottom-border),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub Modal(:$width-ratio, :$height-ratio, :$dim-background) is export {
-	ModalBuilder.new:
+sub Modal(:$width-ratio, :$height-ratio, :$dim-background, :$size, :$style, |c) is export {
+	my $builder = ModalBuilder.new:
 		|(:$width-ratio with $width-ratio),
 		|(:$height-ratio with $height-ratio),
-		|(:$dim-background with $dim-background)
+		|(:$dim-background with $dim-background),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub ConfirmModal is export { ConfirmModalBuilder.new }
+sub ConfirmModal(:$size, :$style, |c) is export {
+	my $builder = ConfirmModalBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub Toast is export { ToastBuilder.new }
+sub Toast(:$size, :$style, |c) is export {
+	my $builder = ToastBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub Spinner(:@frames, :$interval, :$style) is export {
-	SpinnerBuilder.new:
+sub Spinner(:@frames, :$interval, :$style, :$size, |c) is export {
+	my $builder = SpinnerBuilder.new:
 		|(:@frames with @frames),
 		|(:$interval with $interval),
-		|(:$style with $style)
+		|(:$style with $style),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder
 }
 
-sub Image(:$file) is export { ImageBuilder.new: |(:$file with $file) }
-
-sub ScrollView(:$show-scrollbar) is export {
-	ScrollViewBuilder.new: |(:$show-scrollbar with $show-scrollbar)
+sub Image(:$file, :$size, :$style, |c) is export {
+	my $builder = ImageBuilder.new: |(:$file with $file), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub Table(:$show-scrollbar) is export {
-	TableBuilder.new: |(:$show-scrollbar with $show-scrollbar)
+sub ScrollView(:$show-scrollbar, :$size, :$style, |c) is export {
+	my $builder = ScrollViewBuilder.new: |(:$show-scrollbar with $show-scrollbar), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub TabBar is export { TabBarBuilder.new }
+sub Table(:$show-scrollbar, :$size, :$style, |c) is export {
+	my $builder = TableBuilder.new: |(:$show-scrollbar with $show-scrollbar), |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub CommandPalette is export { CommandPaletteBuilder.new }
+sub TabBar(:$size, :$style, |c) is export {
+	my $builder = TabBarBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub FileBrowser is export { FileBrowserBuilder.new }
+sub CommandPalette(:$size, :$style, |c) is export {
+	my $builder = CommandPaletteBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub HelpOverlay(:$app!, :$focused-widget) is export {
-	HelpOverlayBuilder.new:
+sub FileBrowser(:$size, :$style, |c) is export {
+	my $builder = FileBrowserBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
+
+sub HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c) is export {
+	my $builder = HelpOverlayBuilder.new:
 		:$app,
-		|(:$focused-widget with $focused-widget)
+		|(:$focused-widget with $focused-widget),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-multi CardList() is export { CardListBuilder.new }
+multi CardList(:$size, :$style, |c) is export {
+	my $builder = CardListBuilder.new: |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-multi CardList(&block) is export { CardListBuilder.new: :&block }
+multi CardList(&block, :$size, :$style, |c) is export {
+	my $builder = CardListBuilder.new: :&block, |c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
+}
 
-sub RichText(:$truncated-top, :$truncated-bottom) is export {
-	RichTextBuilder.new:
+sub RichText(:$truncated-top, :$truncated-bottom, :$size, :$style, |c) is export {
+	my $builder = RichTextBuilder.new:
 		|(:$truncated-top with $truncated-top),
-		|(:$truncated-bottom with $truncated-bottom)
+		|(:$truncated-bottom with $truncated-bottom),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub MultiLineInput(:$placeholder, :$max-lines) is export {
-	MultiLineInputBuilder.new:
+sub MultiLineInput(:$placeholder, :$max-lines, :$size, :$style, |c) is export {
+	my $builder = MultiLineInputBuilder.new:
 		|(:$placeholder with $placeholder),
-		|(:$max-lines with $max-lines)
+		|(:$max-lines with $max-lines),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub PasswordStrength(:$input!, :$show-label) is export {
-	PasswordStrengthBuilder.new:
+sub PasswordStrength(:$input!, :$show-label, :$size, :$style, |c) is export {
+	my $builder = PasswordStrengthBuilder.new:
 		:$input,
-		|(:$show-label with $show-label)
+		|(:$show-label with $show-label),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
 sub Plot(:$type, :$min-y, :$max-y, :$title, :$gridtype, :$rangex,
-		:@store-path, :$empty-message) is export {
-	PlotBuilder.new:
+		:@store-path, :$empty-message, :$size, :$style, |c) is export {
+	my $builder = PlotBuilder.new:
 		|(:$type with $type),
 		|(:$min-y with $min-y),
 		|(:$max-y with $max-y),
@@ -228,13 +385,17 @@ sub Plot(:$type, :$min-y, :$max-y, :$title, :$gridtype, :$rangex,
 		|(:$gridtype with $gridtype),
 		|(:$rangex with $rangex),
 		|(:@store-path with @store-path),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
 sub BarChart(:@data, :@store-path, :$orientation, :$palette,
 		:$show-axis, :$show-labels, :$min, :$max,
-		:$tick-count, :$empty-message) is export {
-	BarChartBuilder.new:
+		:$tick-count, :$empty-message, :$size, :$style, |c) is export {
+	my $builder = BarChartBuilder.new:
 		|(:@data with @data),
 		|(:@store-path with @store-path),
 		|(:$orientation with $orientation),
@@ -244,13 +405,17 @@ sub BarChart(:@data, :@store-path, :$orientation, :$palette,
 		|(:$min with $min),
 		|(:$max with $max),
 		|(:$tick-count with $tick-count),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
 sub LineChart(:@series, :&store-path-fn, :$palette,
 		:$show-axis, :$show-legend, :$fill-below, :$overlap,
-		:$y-min, :$y-max, :$tick-count, :$empty-message) is export {
-	LineChartBuilder.new:
+		:$y-min, :$y-max, :$tick-count, :$empty-message, :$size, :$style, |c) is export {
+	my $builder = LineChartBuilder.new:
 		|(:@series with @series),
 		|(:&store-path-fn with &store-path-fn),
 		|(:$palette with $palette),
@@ -261,13 +426,17 @@ sub LineChart(:@series, :&store-path-fn, :$palette,
 		|(:$y-min with $y-min),
 		|(:$y-max with $y-max),
 		|(:$tick-count with $tick-count),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
 sub ScatterPlot(:@series, :@store-path, :$palette,
 		:$x-min, :$x-max, :$y-min, :$y-max, :$overlap,
-		:$empty-message) is export {
-	ScatterPlotBuilder.new:
+		:$empty-message, :$size, :$style, |c) is export {
+	my $builder = ScatterPlotBuilder.new:
 		|(:@series with @series),
 		|(:@store-path with @store-path),
 		|(:$palette with $palette),
@@ -276,32 +445,44 @@ sub ScatterPlot(:@series, :@store-path, :$palette,
 		|(:$y-min with $y-min),
 		|(:$y-max with $y-max),
 		|(:$overlap with $overlap),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub Sparkline(:@data, :@store-path, :$min, :$max, :$empty-message) is export {
-	SparklineBuilder.new:
+sub Sparkline(:@data, :@store-path, :$min, :$max, :$empty-message, :$size, :$style, |c) is export {
+	my $builder = SparklineBuilder.new:
 		|(:@data with @data),
 		|(:@store-path with @store-path),
 		|(:$min with $min),
 		|(:$max with $max),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub Heatmap(:@data, :@store-path, :$ramp, :$min, :$max, :$empty-message) is export {
-	HeatmapBuilder.new:
+sub Heatmap(:@data, :@store-path, :$ramp, :$min, :$max, :$empty-message, :$size, :$style, |c) is export {
+	my $builder = HeatmapBuilder.new:
 		|(:@data with @data),
 		|(:@store-path with @store-path),
 		|(:$ramp with $ramp),
 		|(:$min with $min),
 		|(:$max with $max),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
 sub Histogram(:@values, :$bins, :@bin-edges, :$orientation, :$palette,
 		:$show-axis, :$show-labels, :$min, :$max,
-		:$tick-count, :$empty-message) is export {
-	HistogramBuilder.new:
+		:$tick-count, :$empty-message, :$size, :$style, |c) is export {
+	my $builder = HistogramBuilder.new:
 		|(:@values with @values),
 		|(:$bins with $bins),
 		|(:@bin-edges with @bin-edges),
@@ -312,21 +493,33 @@ sub Histogram(:@values, :$bins, :@bin-edges, :$orientation, :$palette,
 		|(:$min with $min),
 		|(:$max with $max),
 		|(:$tick-count with $tick-count),
-		|(:$empty-message with $empty-message)
+		|(:$empty-message with $empty-message),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub Axis(:$min!, :$max!, :$edge, :$tick-count, :$show-line) is export {
-	AxisBuilder.new:
+sub Axis(:$min!, :$max!, :$edge, :$tick-count, :$show-line, :$size, :$style, |c) is export {
+	my $builder = AxisBuilder.new:
 		:$min,
 		:$max,
 		|(:$edge with $edge),
 		|(:$tick-count with $tick-count),
-		|(:$show-line with $show-line)
+		|(:$show-line with $show-line),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
 
-sub Legend(:@series, :$orientation, :$swatch) is export {
-	LegendBuilder.new:
+sub Legend(:@series, :$orientation, :$swatch, :$size, :$style, |c) is export {
+	my $builder = LegendBuilder.new:
 		|(:@series with @series),
 		|(:$orientation with $orientation),
-		|(:$swatch with $swatch)
+		|(:$swatch with $swatch),
+		|c;
+	$builder.size(|$size) if $size.defined;
+	$builder.style(|$style) if $style.defined;
+	$builder
 }
