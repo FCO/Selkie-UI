@@ -5,6 +5,11 @@ unit class Selkie::UI::CommandPaletteBuilder is Selkie::UI::Base;
 
 has Selkie::Widget::CommandPalette $.obj .= new;
 has @!commands;
+has $!modal;
+
+multi method add-command(:$action, Str :$label!) {
+	$.add-command: $action, :$label
+}
 
 multi method add-command(&action, Str :$label!) {
 	@!commands.push: %(:$label, :&action);
@@ -55,18 +60,33 @@ method reset {
 }
 
 method build(:$width-ratio, :$height-ratio) {
-	$!obj.build(
-		|(:$width-ratio with $width-ratio),
+	$!modal = $!obj.build(
+		|(:$width-ratio  with $width-ratio ),
 		|(:$height-ratio with $height-ratio),
 	);
+	self
 }
 
 method focusable-widget { $!obj.focusable-widget }
 
-method modal { $!obj.modal }
+method focus {
+	$*UI-APP.obj.focus: $!obj.focusable-widget;
+	self
+}
+
+method modal { $!modal // $.build }
+
+method show-modal {
+	$*UI-APP.obj.show-modal: $!modal;
+	self
+}
 
 method on-command(&block) {
-	$!obj.on-command.tap: -> $cmd { block self, $cmd };
+	my $app = $*UI-APP;
+	$!obj.on-command.tap: -> $cmd {
+		my $*UI-APP = $app;
+		block self, $cmd
+	}
 	self
 }
 

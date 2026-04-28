@@ -30,4 +30,16 @@ submethod TWEAK(:&block) {
 	self
 }
 
+multi method theme(Selkie::Theme $theme) { $!obj.set-theme: $theme; self }
+
+multi method theme(*%theme) { $!obj.theme: Selkie::Theme.new: |%theme; self }
+
+multi method theme(&theme) {
+	my %*UI-PATHS := SetHash.new;
+	$ = theme self;
+	$.auto-subscribe: "theme", { self.theme: theme self }
+	self
+}
+
+
 method run { $!obj.run }

@@ -1,4 +1,5 @@
 use Selkie::Sizing;
+use Selkie::Widget;
 use Selkie::Style;
 
 unit class Selkie::UI::Base;
@@ -9,12 +10,16 @@ submethod TWEAK(|) {
 
 method auto-subscribe($method, &block) {
 	with $*UI-APP.obj.store {
+		my $app = $*UI-APP;
 		for %*UI-PATHS.keys -> $path {
 			.subscribe-path-callback(
 				"{ $.obj.WHERE }-{ self.^name }-{ $method }-{ $path }",
 				[ $path ],
-				&block,
-				$.obj
+				{
+					my $*UI-APP = $app;
+					block
+				},
+				$.obj ~~ Selkie::Widget ?? $.obj !! Selkie::Widget
 			)
 		}
 	}
@@ -51,5 +56,10 @@ multi method size(&sizing-block) {
 	my %*UI-PATHS := SetHash.new;
 	$ = sizing-block self;
 	$.auto-subscribe: "size", { self.size: sizing-block self }
+	self
+}
+
+method focus {
+	$*UI-APP.obj.focus: $.obj;
 	self
 }

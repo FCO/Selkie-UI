@@ -8,7 +8,7 @@ has Selkie::Widget::CardList $.obj .= new;
 has &.block;
 
 
-multi method add-item($widget, :$root = $*UI-PARENT, :$height!, :$border) {
+multi method add-item($widget, :$height!, :$root = $*UI-PARENT, :$border) {
 	my $root-widget = $root ~~ Selkie::Widget ?? $root !! $root.obj;
 	my $item-widget = $widget ~~ Selkie::Widget ?? $widget !! $widget.obj;
 	my $border-widget = $border.defined
@@ -19,7 +19,7 @@ multi method add-item($widget, :$root = $*UI-PARENT, :$height!, :$border) {
 	self
 }
 
-multi method add-item(&block, :$root, :$height!, :$border) {
+multi method add-item(&block, :$height!, :$root = $*UI-PARENT.obj, :$border) {
 	my $caller-parent = CALLERS::<$*UI-PARENT> // $*UI-PARENT;
 	my $local-root = $root // $caller-parent;
 	my @*UI-NODES;

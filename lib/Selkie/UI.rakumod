@@ -42,46 +42,6 @@ use Selkie::UI::HistogramBuilder;
 use Selkie::UI::AxisBuilder;
 use Selkie::UI::LegendBuilder;
 
-use Selkie::App;
-use Selkie::Layout::VBox;
-use Selkie::Layout::HBox;
-use Selkie::Layout::Split;
-use Selkie::Widget::Button;
-use Selkie::Widget::Text;
-use Selkie::Widget::TextStream;
-use Selkie::Widget::TextInput;
-use Selkie::Widget::MultiLineInput;
-use Selkie::Widget::Checkbox;
-use Selkie::Widget::RadioGroup;
-use Selkie::Widget::Select;
-use Selkie::Widget::ProgressBar;
-use Selkie::Widget::ListView;
-use Selkie::Widget::CardList;
-use Selkie::Widget::ScrollView;
-use Selkie::Widget::RichText;
-use Selkie::Widget::Border;
-use Selkie::Widget::Modal;
-use Selkie::Widget::ConfirmModal;
-use Selkie::Widget::Toast;
-use Selkie::Widget::Spinner;
-use Selkie::Widget::Image;
-use Selkie::Widget::Table;
-use Selkie::Widget::TabBar;
-use Selkie::Widget::CommandPalette;
-use Selkie::Widget::FileBrowser;
-use Selkie::Widget::HelpOverlay;
-use Selkie::Widget::PasswordStrength;
-use Selkie::Widget::Plot;
-use Selkie::Widget::BarChart;
-use Selkie::Widget::LineChart;
-use Selkie::Widget::ScatterPlot;
-use Selkie::Widget::Sparkline;
-use Selkie::Widget::Heatmap;
-use Selkie::Widget::Histogram;
-use Selkie::Widget::Axis;
-use Selkie::Widget::Legend;
-use Selkie::Sizing;
-
 my %states;
 sub new-state(
 	$default,
@@ -114,7 +74,11 @@ sub new-state(
 }
 
 sub Handler(Str() $name, &block) is export {
-	$*UI-APP.obj.store.register-handler($name, -> $st, %ev { block $*UI-APP, %ev })
+	my $app = $*UI-APP;
+	$*UI-APP.obj.store.register-handler: $name, -> $st, %ev {
+		my $*UI-APP = $app;
+		block $*UI-APP, %ev
+	}
 }
 
 multi Screen(&block, Str :$name = "main", |c) is export {
@@ -134,11 +98,15 @@ sub OnFrame(&block) is export {
 }
 
 sub OnKey(Str:D $spec, &handler, Str :$screen) is export {
-	$*UI-APP.obj.on-key($spec, &handler, |(:$screen with $screen))
+	my $app = $*UI-APP;
+	$app.obj.on-key($spec, -> |c {
+		my $*UI-APP = $app;
+		handler(|c)
+	}, |(:$screen with $screen))
 }
 
 sub Dispatch($event, *%payload) is export {
-	$*UI-APP.obj.store.dispatch($event, |%payload)
+	$*UI-APP.obj.store.dispatch: $event, |%payload
 }
 
 sub Tick is export {
@@ -147,6 +115,14 @@ sub Tick is export {
 
 sub Quit is export {
 	$*UI-APP.obj.quit
+}
+
+sub CloseModal is export {
+	$*UI-APP.obj.close-modal
+}
+
+multi sub Toast(Str $message, Numeric :$duration = 3e0) is export {
+	$*UI-APP.obj.toast($message, :duration($duration.Num))
 }
 
 sub VBox(&block, :$size, :$style, |c) is export {
@@ -192,7 +168,7 @@ sub TextStream(:$placeholder, :$size, :$style, |c) is export {
 }
 
 sub TextInput(:$placeholder, :$size, :$style, |c) is export {
-	my $builder = TextInputBuilder.new: :$placeholder, |c;
+	my $builder = TextInputBuilder.new: |(:$placeholder with $placeholder), |c;
 	$builder.size(|$size) if $size.defined;
 	$builder.style(|$style) if $style.defined;
 	$builder
@@ -233,7 +209,17 @@ sub ListView(:$size, :$style, |c) is export {
 	$builder
 }
 
-sub Border(:$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c) is export {
+multi Border(&block, :$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c) is export {
+	my $builder = Border
+		|(:$title with $title),
+		|(:$hide-top-border with $hide-top-border),
+		|(:$hide-bottom-border with $hide-bottom-border),
+		|c;
+	$builder.content: &block;
+	$builder
+}
+
+multi Border(:$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c) is export {
 	my $builder = BorderBuilder.new:
 		|(:$title with $title),
 		|(:$hide-top-border with $hide-top-border),
@@ -262,7 +248,7 @@ sub ConfirmModal(:$size, :$style, |c) is export {
 	$builder
 }
 
-sub Toast(:$size, :$style, |c) is export {
+multi sub Toast(:$size, :$style, |c) is export {
 	my $builder = ToastBuilder.new: |c;
 	$builder.size(|$size) if $size.defined;
 	$builder.style(|$style) if $style.defined;

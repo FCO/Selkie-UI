@@ -11,6 +11,11 @@ multi method file(Str $file) {
 	self
 }
 
+multi method set-file(Str $file) {
+	$!obj.set-file($file);
+	self
+}
+
 multi method file(&block) {
 	my %*UI-PATHS := SetHash.new;
 	$ = block self;

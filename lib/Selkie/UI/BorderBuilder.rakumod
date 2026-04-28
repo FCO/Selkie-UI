@@ -64,7 +64,7 @@ method !set-content-from-block(&block) {
 	my @*UI-NODES;
 	block self;
 	with @*UI-NODES.head -> $node {
-		$!obj.set-content($node.obj);
+		$!obj.set-content: $_ with $node.obj;
 	}
 }
 
@@ -74,7 +74,7 @@ submethod TWEAK(:&block) {
 	my @*UI-NODES;
 	block self;
 	with @*UI-NODES.head -> $node {
-		$!obj.set-content($node.obj);
+		$!obj.set-content: $_ with $node.obj;
 	}
 	self
 }

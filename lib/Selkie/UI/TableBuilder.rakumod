@@ -55,3 +55,20 @@ method on-activate(&block) {
 	$!obj.on-activate.tap: -> $idx { block self, $idx };
 	self
 }
+
+method columns {
+	$!obj.columns
+}
+
+method row-at(UInt $idx) {
+	$!obj.row-at($idx)
+}
+
+method sort-column {
+	$!obj.sort-column
+}
+
+method on-key(Str $key, &block) {
+	$!obj.on-key($key, -> $ { block self, $ });
+	self
+}

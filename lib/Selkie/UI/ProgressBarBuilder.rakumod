@@ -29,6 +29,18 @@ multi method indeterminate(&block) {
 	self
 }
 
+multi method show-percentage(Bool $show = True) {
+	$!obj.show-percentage = $show;
+	self
+}
+
+multi method show-percentage(&block) {
+	my %*UI-PATHS := SetHash.new;
+	$ = block self;
+	$.auto-subscribe: "show-percentage", { self.show-percentage: block self }
+	self
+}
+
 method tick {
 	$!obj.tick;
 	self
