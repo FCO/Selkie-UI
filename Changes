@@ -1,4 +1,14 @@
 Revision history for Selkie::UI
 
 {{$NEXT}}
-    - Initial version
+    - Documentation improvements: rakudoc, CONTRIBUTING.md, CODE_OF_CONDUCT.md
+    - Inline POD in main module and Base class
+    - Enhanced AGENTS.md with architecture overview and testing patterns
+    - Fixed META6.json description
+    - Initial version with declarative TUI DSL
+    - 38+ widget builders covering layouts, inputs, text, charts, and overlays
+    - Reactive state management with new-state and auto-subscribe
+    - Block-based setters for real-time UI updates
+    - Helper functions: OnKey, OnFrame, Dispatch, Tick, Quit, Toast, CloseModal, Handler
+    - 5 test files covering all builder categories
+    - 10 example scripts demonstrating core patterns

@@ -1,16 +1,17 @@
-unit class Selkie::UI;
-
 =begin pod
 
-=NAME Selkie::UI
-=TITLE UI Builder Abstractions for Selkie
+=NAME
+Selkie::UI
 
-=NOTE This module is under active development. API may change.
+=TITLE
+UI Builder Abstractions for Selkie
+
+=NOTE
+This module is under active development. API may change.
 
 =SYNOPSIS
 
 =begin code :lang<raku>
-
 use Selkie::UI;
 
 App {
@@ -20,106 +21,118 @@ App {
         }
     }
 }
-
 =end code
 
 =DESCRIPTION
 
-Selkie::UI provides a Raku-native DSL for building terminal user interfaces using the Selkie framework. Unlike traditional imperative UI code where you manually manage rendering and event loops, this module offers a declarative approach—your code describes B<what> the UI should look like and do, not B<how> to achieve it step-by-step.
+Selkie::UI provides a Raku-native DSL for building terminal user interfaces using the
+L<Selkie|https://raku.land/zef:apogee/Selkie> framework. Unlike traditional imperative
+UI code where you manually manage rendering and event loops, this module offers a
+declarative approach — your code describes B<what> the UI should look like and do,
+not B<how> to achieve it step-by-step.
 
-Widgets are declared hierarchically using block syntax, with properties and handlers specified via chained method calls. This makes UI definitions intuitive, compositional, and easy to reason about—whether you're building simple tools or complex applications.
+Widgets are declared hierarchically using block syntax, with properties and handlers
+specified via chained method calls. This makes UI definitions intuitive, compositional,
+and easy to reason about — whether you are building simple tools or complex applications.
 
-The DSL handles the glue between your declarative definitions and Selkie's imperative runtime, including state management with automatic UI updates when reactive variables change.
+The DSL handles the glue between your declarative definitions and Selkie's imperative
+runtime, including state management with automatic UI updates when reactive variables
+change.
 
-=head2 State Management
+=head1 State Management
 
-C<new-state> creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
+C<new-state> creates reactive state variables that automatically dispatch updates and
+re-render affected UI elements.
 
-For compound values (arrays, hashes), assign a new value to trigger updates. In-place mutations do not dispatch.
+For compound values (arrays, hashes), assign a new value to trigger updates. In-place
+mutations do not dispatch.
 
 =begin code :lang<raku>
-
 my $items := new-state [];
 $items = [ |$items, 'new' ];
-
 =end code
 
-=head2 Block-Based Setters
+=head1 Block-Based Setters
 
-Many builder methods accept a block instead of a value. The block is evaluated once and the builder auto-subscribes to any state read inside it, re-running the setter when those states change. These reactive setters require an active C<App> because auto-subscribe uses C<$*UI-APP> and the store.
+Many builder methods accept a block instead of a value. The block is evaluated once
+and the builder auto-subscribes to any state read inside it, re-running the setter
+when those states change. These reactive setters require an active C<App> because
+auto-subscribe uses C<$*UI-APP> and the store.
 
-=head2 Builders
+=head1 Builders
 
-The module exports builder functions for Selkie primitives. Each builder returns a chainable builder object that wraps the underlying widget.
+The module exports builder functions for Selkie primitives. Each builder returns a
+chainable builder object that wraps the underlying widget.
 
-=head3 Layout and Containers
+=head2 Layout and Containers
 
-=item C<App> — Application entry point that initializes the UI and starts the event loop
-=item C<Screen> — Named screens that can be switched between
-=item C<VBox>, C<HBox>, C<Split> — Layout containers for stacking or splitting widgets
-=item C<Border>, C<Modal>, C<ScrollView> — Container and decorator widgets
-=item C<CardList> — Scrollable list of variable-height widgets
+=item1 C<App> — Application entry point that initializes the UI and starts the event loop
+=item1 C<Screen> — Named screens that can be switched between
+=item1 C<VBox>, C<HBox>, C<Split> — Layout containers for stacking or splitting widgets
+=item1 C<Border>, C<Modal>, C<ScrollView> — Container and decorator widgets
+=item1 C<CardList> — Scrollable list of variable-height widgets
 
-=head3 Inputs and Selection
+=head2 Inputs and Selection
 
-=item C<Button> — Clickable button with label and press handler
-=item C<TextInput>, C<MultiLineInput> — Text input fields with submit handling
-=item C<Checkbox>, C<RadioGroup>, C<Select> — Selection controls
-=item C<ProgressBar> — Progress indicator
+=item1 C<Button> — Clickable button with label and press handler
+=item1 C<TextInput>, C<MultiLineInput> — Text input fields with submit handling
+=item1 C<Checkbox>, C<RadioGroup>, C<Select> — Selection controls
+=item1 C<ProgressBar> — Progress indicator
 
-=head3 Text and Lists
+=head2 Text and Lists
 
-=item C<Text>, C<TextStream>, C<RichText> — Text display widgets
-=item C<ListView>, C<Table>, C<TabBar> — List and table widgets
-=item C<Image>, C<Spinner>, C<Toast> — Media and status widgets
+=item1 C<Text>, C<TextStream>, C<RichText> — Text display widgets
+=item1 C<ListView>, C<Table>, C<TabBar> — List and table widgets
+=item1 C<Image>, C<Spinner>, C<Toast> — Media and status widgets
 
-=head3 Overlays and Helpers
+=head2 Overlays and Helpers
 
-=item C<ConfirmModal> — Confirmation modal builder
-=item C<CommandPalette> — Fuzzy command launcher
-=item C<FileBrowser> — File picker modal
-=item C<HelpOverlay> — Contextual keybind help
-=item C<PasswordStrength> — Password strength meter
+=item1 C<ConfirmModal> — Confirmation modal builder
+=item1 C<CommandPalette> — Fuzzy command launcher
+=item1 C<FileBrowser> — File picker modal
+=item1 C<HelpOverlay> — Contextual keybind help
+=item1 C<PasswordStrength> — Password strength meter
 
-=head3 Charts
+=head2 Charts
 
-=item C<Plot>, C<BarChart>, C<LineChart>, C<ScatterPlot> — Chart widgets
-=item C<Sparkline>, C<Heatmap>, C<Histogram> — Inline and grid charts
-=item C<Axis>, C<Legend> — Chart adornments
+=item1 C<Plot>, C<BarChart>, C<LineChart>, C<ScatterPlot> — Chart widgets
+=item1 C<Sparkline>, C<Heatmap>, C<Histogram> — Inline and grid charts
+=item1 C<Axis>, C<Legend> — Chart adornments
 
-=head2 Helpers
+=head1 Helpers
 
 App helpers that interact with the runtime:
 
-=item C<OnKey> — Register global key handlers
-=item C<OnFrame> — Register a per-frame callback
-=item C<Dispatch> — Dispatch events to the store
-=item C<Tick> — Tick the store immediately
-=item C<Quit> — Quit the application
-=item C<Toast> — Show a transient toast message
+=item1 C<OnKey> — Register global key handlers
+=item1 C<OnFrame> — Register a per-frame callback
+=item1 C<Dispatch> — Dispatch events to the store
+=item1 C<Tick> — Tick the store immediately
+=item1 C<Quit> — Quit the application
+=item1 C<Toast> — Show a transient toast message
 
-=head2 Playground
+=head1 Playground
 
 There is a built-in playground to live-edit/test Selkie::UI code:
 
 =begin code
-
 raku -I lib bin/selkie-ui-playground.raku
-
 =end code
 
-![](./playground.gif)
+=para L<![](./playground.gif)|./playground.gif>
 
-=head2 Examples
+=head1 Examples
 
-=head3 Text input with reactive display
+=head2 Text input with reactive display
 
 This example creates a text input field that echoes user input to a text stream above it.
 
-The program creates a reactive string variable with C<new-state>, places a vertical box layout on screen, adds a text stream widget to display messages, and adds a text input widget. When the user types and presses Enter, the input text is stored in the reactive variable, which automatically updates the text stream, and the input field is cleared for the next entry.
+The program creates a reactive string variable with C<new-state>, places a vertical box
+layout on screen, adds a text stream widget to display messages, and adds a text input
+widget. When the user types and presses Enter, the input text is stored in the reactive
+variable, which automatically updates the text stream, and the input field is cleared
+for the next entry.
 
 =begin code :lang<raku>
-
 use Selkie::UI;
 
 App {
@@ -132,27 +145,30 @@ App {
         }
     }
 }
-
 =end code
 
-The C<App> block is the entry point that initializes the application.
-The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as an empty string.
-The C<VBox> widget arranges its children vertically from top to bottom.
-C<TextStream.append> with a block argument reactively displays the value of C<$next-msg> and updates whenever it changes.
-C<TextInput> creates a single-line text input with a placeholder hint.
-C<.size(1)> constrains the input to a fixed height of one row.
-C<.on-submit> registers a handler that runs when the user presses Enter. The handler receives the input widget and the submitted text, stores the text in the reactive variable, and clears the input for the next entry.
+The C<App> block is the entry point that initializes the application. The C<new-state>
+function creates a reactive state variable bound with C<:=>, initialized as an empty
+string. The C<VBox> widget arranges its children vertically from top to bottom.
+C<TextStream.append> with a block argument reactively displays the value of C<$next-msg>
+and updates whenever it changes. C<TextInput> creates a single-line text input with a
+placeholder hint. C<.size(1)> constrains the input to a fixed height of one row.
+C<.on-submit> registers a handler that runs when the user presses Enter. The handler
+receives the input widget and the submitted text, stores the text in the reactive
+variable, and clears the input for the next entry.
 
-![](./text.gif)
+=para L<![](./text.gif)|./text.gif>
 
-=head3 Button with reactive state
+=head2 Button with reactive state
 
 This example shows a button whose label changes based on a numeric state variable.
 
-The program creates a reactive integer counter, places it in a vertical box, and displays a button. The button label is computed from the counter value using a block—when the counter changes, the label automatically re-renders. Each button press increments the counter, updating both the counter value and the button label.
+The program creates a reactive integer counter, places it in a vertical box, and displays
+a button. The button label is computed from the counter value using a block — when the
+counter changes, the label automatically re-renders. Each button press increments the
+counter, updating both the counter value and the button label.
 
 =begin code :lang<raku>
-
 use Selkie::UI;
 
 App {
@@ -162,23 +178,23 @@ App {
             .on-press: { ++$val }
     }
 }
-
 =end code
 
-The C<App> block is the entry point that initializes the application.
-The C<new-state> function creates a reactive state variable bound with C<:=>, initialized as zero.
-The C<VBox> widget arranges its children vertically.
-C<Button.label> with a block argument computes the label text. The ternary operator shows "BLA 0" when the value is zero, otherwise "BLE $val".
-C<.on-press> registers a handler that runs when the user clicks the button. The handler increments the counter with C<++$val>, triggering a UI update.
+The C<App> block is the entry point that initializes the application. The C<new-state>
+function creates a reactive state variable bound with C<:=>, initialized as zero. The
+C<VBox> widget arranges its children vertically. C<Button.label> with a block argument
+computes the label text. The ternary operator shows "BLA 0" when the value is zero,
+otherwise "BLE $val". C<.on-press> registers a handler that runs when the user clicks
+the button. The handler increments the counter with C<++$val>, triggering a UI update.
 
-![](./test.gif)
+=para L<![](./test.gif)|./test.gif>
 
-=head3 ListView with reactive items
+=head2 ListView with reactive items
 
-This example binds a list view to a reactive array. When the array changes, the list updates automatically.
+This example binds a list view to a reactive array. When the array changes, the list
+updates automatically.
 
 =begin code :lang<raku>
-
 use Selkie::UI;
 
 App {
@@ -190,7 +206,266 @@ App {
         }
     }
 }
-
 =end code
+
+=head1 EXPORTS
+
+=head2 App and Screen
+
+=for head2 :numbered
+App(&block, |c)
+
+Application entry point that initializes the UI and starts the event loop.
+
+=for head2 :numbered
+Screen(&block, Str :$name = "main", |c)
+
+Named screens that can be switched between.
+
+=head2 Layout Containers
+
+=for head2 :numbered
+VBox(&block, :$size, :$style, |c)
+
+Vertical box layout. Stacks children top-to-bottom.
+
+=for head2 :numbered
+HBox(&block, :$size, :$style, |c)
+
+Horizontal box layout. Stacks children left-to-right.
+
+=for head2 :numbered
+Split(&block, :$size, :$style, |c)
+
+Split container. Divides space between children.
+
+=head2 Inputs and Selection
+
+=for head2 :numbered
+Button(:$label, :$size, :$style, |c)
+
+Pressable button with label. Supports C<.on-press> handler.
+
+=for head2 :numbered
+TextInput(:$placeholder, :$size, :$style, |c)
+
+Single-line text input field. Supports C<.value> for current text.
+
+=for head2 :numbered
+MultiLineInput(:$placeholder, :$max-lines, :$size, :$style, |c)
+
+Multi-line text input area.
+
+=for head2 :numbered
+Checkbox(:$label, :$size, :$style, |c)
+
+Toggleable checkbox with label.
+
+=for head2 :numbered
+RadioGroup(:$size, :$style, |c)
+
+Group of radio buttons for exclusive selection.
+
+=for head2 :numbered
+Select(:$size, :$style, |c)
+
+Dropdown-style selection widget.
+
+=for head2 :numbered
+PasswordStrength(:$input!, :$show-label, :$size, :$style, |c)
+
+Password input with strength meter visualization.
+
+=head2 Text and Rich Content
+
+=for head2 :numbered
+Text(:$text, :$size, :$style, |c)
+
+Static text display widget.
+
+=for head2 :numbered
+TextStream(:$placeholder, :$size, :$style, |c)
+
+Scrollable text stream. Supports C<.append> for streaming content.
+
+=for head2 :numbered
+RichText(:$truncated-top, :$truncated-bottom, :$size, :$style, |c)
+
+Rich text widget with styled content.
+
+=head2 Lists and Tables
+
+=for head2 :numbered
+ListView(:$size, :$style, |c)
+
+Scrollable list of items. Supports C<.items> for reactive data.
+
+=for head2 :numbered
+Table(:$show-scrollbar, :$size, :$style, |c)
+
+Tabular data display with column headers.
+
+=for head2 :numbered
+CardList(&block, :$size, :$style, |c)
+
+Scrollable list of variable-height widget cards.
+
+=for head2 :numbered
+TabBar(:$size, :$style, |c)
+
+Tabbed navigation bar.
+
+=head2 Overlays and Helpers
+
+=for head2 :numbered
+Border(&block, :$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c)
+
+Bordered container with optional title.
+
+=for head2 :numbered
+Modal(:$width-ratio, :$height-ratio, :$dim-background, :$size, :$style, |c)
+
+Modal overlay dialog.
+
+=for head2 :numbered
+ConfirmModal(:$size, :$style, |c)
+
+Confirmation dialog with accept/cancel buttons.
+
+=for head2 :numbered
+Toast(Str $message, Numeric :$duration = 3e0)
+
+Temporary toast notification.
+
+=for head2 :numbered
+HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c)
+
+Keyboard shortcut help overlay.
+
+=for head2 :numbered
+CommandPalette(:$size, :$style, |c)
+
+Command palette for fuzzy-searchable actions.
+
+=for head2 :numbered
+FileBrowser(:$size, :$style, |c)
+
+File system browser widget.
+
+=head2 Miscellaneous
+
+=for head2 :numbered
+ScrollView(:$show-scrollbar, :$size, :$style, |c)
+
+Scrollable viewport container.
+
+=for head2 :numbered
+Spinner(:@frames, :$interval, :$style, :$size, |c)
+
+Animated spinner with configurable frames and interval.
+
+=for head2 :numbered
+Image(:$file, :$size, :$style, |c)
+
+Image display widget.
+
+=for head2 :numbered
+ProgressBar(:$size, :$style, |c)
+
+Progress bar with configurable value.
+
+=head2 Charts
+
+=for head2 :numbered
+Plot(:$type, :$min-y, :$max-y, :$title, :$gridtype, :$rangex, :@store-path, :$empty-message, :$size, :$style, |c)
+
+General-purpose plot widget.
+
+=for head2 :numbered
+BarChart(:@data, :@store-path, :$orientation, :$palette, :$show-axis, :$show-labels, :$min, :$max, :$tick-count, :$empty-message, :$size, :$style, |c)
+
+Bar chart with configurable orientation and styling.
+
+=for head2 :numbered
+LineChart(:@series, :&store-path-fn, :$palette, :$show-axis, :$show-legend, :$fill-below, :$overlap, :$y-min, :$y-max, :$tick-count, :$empty-message, :$size, :$style, |c)
+
+Line chart with multiple series support.
+
+=for head2 :numbered
+ScatterPlot(:@series, :@store-path, :$palette, :$x-min, :$x-max, :$y-min, :$y-max, :$overlap, :$empty-message, :$size, :$style, |c)
+
+Scatter plot for point data visualization.
+
+=for head2 :numbered
+Sparkline(:@data, :@store-path, :$min, :$max, :$empty-message, :$size, :$style, |c)
+
+Compact inline sparkline chart.
+
+=for head2 :numbered
+Heatmap(:@data, :@store-path, :$ramp, :$min, :$max, :$empty-message, :$size, :$style, |c)
+
+Heatmap for matrix data visualization.
+
+=for head2 :numbered
+Histogram(:@values, :$bins, :@bin-edges, :$orientation, :$palette, :$show-axis, :$show-labels, :$min, :$max, :$tick-count, :$empty-message, :$size, :$style, |c)
+
+Histogram for distribution visualization.
+
+=for head2 :numbered
+Axis(:$min!, :$max!, :$edge, :$tick-count, :$show-line, :$size, :$style, |c)
+
+Chart axis with configurable range and ticks.
+
+=for head2 :numbered
+Legend(:@series, :$orientation, :$swatch, :$size, :$style, |c)
+
+Chart legend for multi-series plots.
+
+=head2 State and Helpers
+
+=for head2 :numbered
+new-state($default, :$name, :$event)
+
+Creates a reactive state variable. Returns a Proxy that auto-tracks reads and dispatches
+events on writes. Requires an active C<App> context.
+
+=for head2 :numbered
+Handler(Str $name, &block)
+
+Registers a store event handler for the given event name.
+
+=for head2 :numbered
+OnKey(Str:D $spec, &handler, Str :$screen)
+
+Registers a keypress handler. C<$spec> is a key specification string.
+
+=for head2 :numbered
+OnFrame(&block)
+
+Registers a per-frame callback for animation or polling.
+
+=for head2 :numbered
+Dispatch($event, *%payload)
+
+Dispatches a named event through the store with optional payload.
+
+=for head2 :numbered
+Tick
+
+Triggers an immediate store tick (re-render cycle).
+
+=for head2 :numbered
+Quit
+
+Exits the TUI application gracefully.
+
+=for head2 :numbered
+CloseModal
+
+Closes the currently open modal dialog.
+
+=AUTHOR Fernando Correa de Oliveira
+
+=LICENSE Artistic-2.0
 
 =end pod

@@ -510,3 +510,59 @@ sub Legend(:@series, :$orientation, :$swatch, :$size, :$style, |c) is export {
 	$builder.style(|$style) if $style.defined;
 	$builder
 }
+
+=begin pod
+
+=head1 Selkie::UI
+
+Declarative DSL for building terminal user interfaces with the Selkie framework.
+See C<lib/Selkie/UI.rakudoc> for comprehensive documentation.
+
+=head2 Core Concepts
+
+=head3 C<new-state($default, :$name, :$event)>
+
+Creates a reactive state variable backed by the Selkie store. Returns a Proxy
+where C<FETCH> tracks access in C<%*UI-PATHS> (for auto-subscription) and
+C<STORE> dispatches update events. Requires an active C<$*UI-APP> context.
+
+For compound values (arrays, hashes), assign a B<new> value to trigger updates.
+In-place mutations do not dispatch.
+
+    my $counter := new-state 0;      # scalar
+    my $items   := new-state [];     # compound — assign new array to update
+
+=head3 Builder Auto-Subscribe
+
+Builder methods accept blocks instead of literal values. When a block is provided,
+any C<new-state> variables read during evaluation are tracked via C<%*UI-PATHS>.
+The builder subscribes to those state paths and re-runs the block when they change.
+
+    my $counter := new-state 0;
+    Text.text: { "Count: $counter" };  # auto-reacts to $counter changes
+
+=head2 Exported Subs
+
+=over 4
+
+=item * App & Screen — C<App>, C<Screen>
+
+=item * Layouts — C<VBox>, C<HBox>, C<Split>
+
+=item * Inputs — C<Button>, C<TextInput>, C<MultiLineInput>, C<Checkbox>, C<RadioGroup>, C<Select>, C<PasswordStrength>
+
+=item * Text — C<Text>, C<TextStream>, C<RichText>
+
+=item * Lists & Tables — C<ListView>, C<Table>, C<CardList>, C<TabBar>
+
+=item * Overlays — C<Border>, C<Modal>, C<ConfirmModal>, C<Toast>, C<HelpOverlay>, C<CommandPalette>, C<FileBrowser>
+
+=item * Misc — C<ScrollView>, C<Spinner>, C<Image>, C<ProgressBar>
+
+=item * Charts — C<Plot>, C<BarChart>, C<LineChart>, C<ScatterPlot>, C<Sparkline>, C<Heatmap>, C<Histogram>, C<Axis>, C<Legend>
+
+=item * State & Helpers — C<new-state>, C<Handler>, C<OnKey>, C<OnFrame>, C<Dispatch>, C<Tick>, C<Quit>, C<CloseModal>
+
+=back
+
+=end pod
