@@ -48,6 +48,13 @@ State Management
 
 `new-state` creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
 
+For compound values (arrays, hashes), assign a new value to trigger updates. In-place mutations do not dispatch.
+
+```raku
+my $items := new-state [];
+$items = [ |$items, 'new' ];
+```
+
 Block-Based Setters
 -------------------
 
@@ -107,6 +114,32 @@ The module exports builder functions for Selkie primitives. Each builder returns
   * `Sparkline`, `Heatmap`, `Histogram` — Inline and grid charts
 
   * `Axis`, `Legend` — Chart adornments
+
+Helpers
+-------
+
+App helpers that interact with the runtime:
+
+  * `OnKey` — Register global key handlers
+
+  * `OnFrame` — Register a per-frame callback
+
+  * `Dispatch` — Dispatch events to the store
+
+  * `Tick` — Tick the store immediately
+
+  * `Quit` — Quit the application
+
+  * `Toast` — Show a transient toast message
+
+Playground
+----------
+
+There is a built-in playground to live-edit/test Selkie::UI code:
+
+    raku -I lib bin/selkie-ui-playground.raku
+
+![](./playground.gif)
 
 Examples
 --------

@@ -35,6 +35,15 @@ The DSL handles the glue between your declarative definitions and Selkie's imper
 
 C<new-state> creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
 
+For compound values (arrays, hashes), assign a new value to trigger updates. In-place mutations do not dispatch.
+
+=begin code :lang<raku>
+
+my $items := new-state [];
+$items = [ |$items, 'new' ];
+
+=end code
+
 =head2 Block-Based Setters
 
 Many builder methods accept a block instead of a value. The block is evaluated once and the builder auto-subscribes to any state read inside it, re-running the setter when those states change. These reactive setters require an active C<App> because auto-subscribe uses C<$*UI-APP> and the store.
@@ -77,6 +86,29 @@ The module exports builder functions for Selkie primitives. Each builder returns
 =item C<Plot>, C<BarChart>, C<LineChart>, C<ScatterPlot> — Chart widgets
 =item C<Sparkline>, C<Heatmap>, C<Histogram> — Inline and grid charts
 =item C<Axis>, C<Legend> — Chart adornments
+
+=head2 Helpers
+
+App helpers that interact with the runtime:
+
+=item C<OnKey> — Register global key handlers
+=item C<OnFrame> — Register a per-frame callback
+=item C<Dispatch> — Dispatch events to the store
+=item C<Tick> — Tick the store immediately
+=item C<Quit> — Quit the application
+=item C<Toast> — Show a transient toast message
+
+=head2 Playground
+
+There is a built-in playground to live-edit/test Selkie::UI code:
+
+=begin code
+
+raku -I lib bin/selkie-ui-playground.raku
+
+=end code
+
+![](./playground.gif)
 
 =head2 Examples
 
