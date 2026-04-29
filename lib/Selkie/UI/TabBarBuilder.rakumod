@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::TabBar;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::TabBarBuilder is Selkie::UI::Base;
 
@@ -50,7 +51,9 @@ method set-active-name-silent(Str $name) {
 }
 
 method on-tab-selected(&block) {
-	$!obj.on-tab-selected.tap: -> $name { block self, $name };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-tab-selected.tap: -> $name { with-ui-context($app, $parent, &block)(self, $name) };
 	self
 }
 

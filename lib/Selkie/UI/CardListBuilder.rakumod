@@ -1,12 +1,21 @@
 use Selkie::UI::Base;
 use Selkie::Widget;
 use Selkie::Widget::CardList;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::CardListBuilder is Selkie::UI::Base;
 
 has Selkie::Widget::CardList $.obj .= new;
 has &.block;
 
+submethod TWEAK(:&block) {
+	return unless &block.defined;
+	my $*UI-PARENT = self;
+	my @*UI-NODES;
+	block self;
+	self.set-items: @*UI-NODES if @*UI-NODES;
+	self
+}
 
 multi method add-item($widget, :$height!, :$root = $*UI-PARENT, :$border) {
 	my $root-widget = $root ~~ Selkie::Widget ?? $root !! $root.obj;
@@ -19,7 +28,7 @@ multi method add-item($widget, :$height!, :$root = $*UI-PARENT, :$border) {
 	self
 }
 
-multi method add-item(&block, :$height!, :$root = $*UI-PARENT.obj, :$border) {
+multi method add-item(&block, :$height!, :$root = $*UI-PARENT, :$border) {
 	my $caller-parent = CALLERS::<$*UI-PARENT> // $*UI-PARENT;
 	my $local-root = $root // $caller-parent;
 	my @*UI-NODES;
@@ -45,9 +54,13 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
+	my $app = $*UI-APP;
 	my %*UI-PATHS := SetHash.new;
 	self.set-items(block self);
-	$.auto-subscribe: "set-items", { self.set-items(block self) }
+	$.auto-subscribe: "set-items", {
+		my $*UI-APP = $app;
+		self.set-items: block self
+	}
 	self
 }
 
@@ -66,12 +79,14 @@ multi method set-item-height(Int $idx, Int $height) {
 }
 
 multi method set-item-height(&block) {
+	my $app = $*UI-APP;
 	my %*UI-PATHS := SetHash.new;
 	my %values = block self;
 	self.set-item-height(|%values);
 	$.auto-subscribe: "set-item-height", {
+		my $*UI-APP = $app;
 		my %next = block self;
-		self.set-item-height(|%next)
+		self.set-item-height: |%next
 	}
 	self
 }
@@ -82,9 +97,13 @@ multi method select-index(Int $idx) {
 }
 
 multi method select-index(&block) {
+	my $app = $*UI-APP;
 	my %*UI-PATHS := SetHash.new;
 	$ = block self;
-	$.auto-subscribe: "select-index", { self.select-index: block self }
+	$.auto-subscribe: "select-index", {
+		my $*UI-APP = $app;
+		self.select-index: block self
+	}
 	self
 }
 
@@ -109,14 +128,10 @@ method scroll-down {
 }
 
 method on-select(&block) {
-	$!obj.on-select.tap: -> $idx { block self, $idx };
-	self
-}
-
-submethod TWEAK(:&block) {
-	return unless &block.defined;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	block self;
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-select.tap: -> $idx {
+		with-ui-context($app, $parent, &block)(self, $idx)
+	}
 	self
 }

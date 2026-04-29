@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::FileBrowser;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::FileBrowserBuilder is Selkie::UI::Base;
 
@@ -17,7 +18,9 @@ method build(:$start-dir, :@extensions, :$show-dotfiles,
 }
 
 method on-select(&block) {
-	$!obj.on-select.tap: -> $path { block self, $path };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-select.tap: -> $path { with-ui-context($app, $parent, &block)(self, $path) };
 	self
 }
 

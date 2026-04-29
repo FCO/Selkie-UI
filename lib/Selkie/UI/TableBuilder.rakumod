@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Table;
+use Selkie::UI::Helpers;
 use Selkie::Sizing;
 
 unit class Selkie::UI::TableBuilder is Selkie::UI::Base;
@@ -47,12 +48,16 @@ method select-index(UInt $idx) {
 }
 
 method on-select(&block) {
-	$!obj.on-select.tap: -> $idx { block self, $idx };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-select.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
 	self
 }
 
 method on-activate(&block) {
-	$!obj.on-activate.tap: -> $idx { block self, $idx };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-activate.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
 	self
 }
 
@@ -69,6 +74,8 @@ method sort-column {
 }
 
 method on-key(Str $key, &block) {
-	$!obj.on-key($key, -> $ { block self, $ });
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-key($key, -> $ { with-ui-context($app, $parent, &block)(self, $) });
 	self
 }

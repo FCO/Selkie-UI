@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::CommandPalette;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::CommandPaletteBuilder is Selkie::UI::Base;
 
@@ -83,9 +84,9 @@ method show-modal {
 
 method on-command(&block) {
 	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
 	$!obj.on-command.tap: -> $cmd {
-		my $*UI-APP = $app;
-		block self, $cmd
+		with-ui-context($app, $parent, &block)(self, $cmd)
 	}
 	self
 }

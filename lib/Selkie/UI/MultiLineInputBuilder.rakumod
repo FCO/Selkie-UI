@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::MultiLineInput;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::MultiLineInputBuilder is Selkie::UI::Base;
 
@@ -8,6 +9,15 @@ has UInt $.max-lines;
 has Selkie::Widget::MultiLineInput $.obj .= new:
 	|(:$!placeholder with $!placeholder),
 	|(:$!max-lines with $!max-lines);
+
+method cursor(UInt :$row, UInt :$col) {
+	my $attr-row = $!obj.^attributes.first: *.name eq '$!cursor-row';
+	my $attr-col = $!obj.^attributes.first: *.name eq '$!cursor-col';
+
+	$attr-row.set_value: $!obj, $($_) with $row;
+	$attr-col.set_value: $!obj, $($_) with $col;
+	self
+}
 
 multi method text(Str $text) {
 	$!obj.set-text($text);
@@ -41,11 +51,15 @@ multi method placeholder(&block) {
 method clear { $!obj.clear }
 
 method on-submit(&block) {
-	$!obj.on-submit.tap: -> $text { block self, $text };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-submit.tap: -> $text { with-ui-context($app, $parent, &block)(self, $text) };
 	self
 }
 
 method on-change(&block) {
-	$!obj.on-change.tap: -> $text { block self, $text };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-change.tap: -> $text { with-ui-context($app, $parent, &block)(self, $text) };
 	self
 }

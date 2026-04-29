@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Button;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ButtonBuilder is Selkie::UI::Base;
 
@@ -19,6 +20,8 @@ multi method label(&label) {
 }
 
 method on-press(&block) {
-	$!obj.on-press.tap: { block self }
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-press.tap: { with-ui-context($app, $parent, &block)(self) }
 	self
 }

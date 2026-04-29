@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::ConfirmModal;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ConfirmModalBuilder is Selkie::UI::Base;
 
@@ -18,7 +19,9 @@ method build(:$title, :$message, :$yes-label, :$no-label,
 }
 
 method on-result(&block) {
-	$!obj.on-result.tap: -> $result { block self, $result };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-result.tap: -> $result { with-ui-context($app, $parent, &block)(self, $result) };
 	self
 }
 

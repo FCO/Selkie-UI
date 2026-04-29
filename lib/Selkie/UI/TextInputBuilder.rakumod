@@ -1,6 +1,7 @@
 use Selkie::UI::Base;
 use Selkie::Widget::TextInput;
 use Selkie::Sizing;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::TextInputBuilder is Selkie::UI::Base;
 
@@ -30,18 +31,18 @@ multi method mask(&mask-block) {
 
 method on-submit(&block) {
 	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
 	$!obj.on-submit.tap: -> $text {
-		my $*UI-APP = $app;
-		block self, $text
+		with-ui-context($app, $parent, &block)(self, $text)
 	}
 	self
 }
 
 method on-change(&block) {
 	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
 	$!obj.on-change.tap: -> $text {
-		my $*UI-APP = $app;
-		block self, $text
+		with-ui-context($app, $parent, &block)(self, $text)
 	}
 	self
 }

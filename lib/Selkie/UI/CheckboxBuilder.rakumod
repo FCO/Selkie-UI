@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Checkbox;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::CheckboxBuilder is Selkie::UI::Base;
 
@@ -31,7 +32,9 @@ multi method check(&block) {
 }
 
 multi method on-change(&block) {
-	$!obj.on-change.tap: -> $checked { block self, $checked };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-change.tap: -> $checked { with-ui-context($app, $parent, &block)(self, $checked) };
 	self
 }
 

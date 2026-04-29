@@ -31,6 +31,7 @@
     "Selkie::UI::HelpOverlayBuilder": "lib/Selkie/UI/HelpOverlayBuilder.rakumod",
     "Selkie::UI::HistogramBuilder": "lib/Selkie/UI/HistogramBuilder.rakumod",
     "Selkie::UI::ImageBuilder": "lib/Selkie/UI/ImageBuilder.rakumod",
+    "Selkie::UI::Helpers": "lib/Selkie/UI/Helpers.rakumod",
     "Selkie::UI::LegendBuilder": "lib/Selkie/UI/LegendBuilder.rakumod",
     "Selkie::UI::LineChartBuilder": "lib/Selkie/UI/LineChartBuilder.rakumod",
     "Selkie::UI::ListViewBuilder": "lib/Selkie/UI/ListViewBuilder.rakumod",

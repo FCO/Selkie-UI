@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Select;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::SelectBuilder is Selkie::UI::Base;
 
@@ -23,6 +24,8 @@ method placeholder(Str $placeholder) {
 }
 
 multi method on-change(&block) {
-	$!obj.on-change.tap: -> $idx { block self, $idx };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-change.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
 	self
 }

@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::ListView;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ListViewBuilder is Selkie::UI::Base;
 
@@ -24,18 +25,18 @@ multi method set-items(&block) {
 
 multi method on-select(&block) {
 	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
 	$!obj.on-select.tap: -> $idx {
-		my $*UI-APP = $app;
-		block self, $idx
+		with-ui-context($app, $parent, &block)(self, $idx)
 	}
 	self
 }
 
 multi method on-activate(&block) {
 	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
 	$!obj.on-activate.tap: -> $idx {
-		my $*UI-APP = $app;
-		block self, $idx
+		with-ui-context($app, $parent, &block)(self, $idx)
 	}
 	self
 }

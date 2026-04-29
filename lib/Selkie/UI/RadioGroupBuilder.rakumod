@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::RadioGroup;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::RadioGroupBuilder is Selkie::UI::Base;
 
@@ -30,6 +31,8 @@ multi method selected(&block) {
 }
 
 multi method on-change(&block) {
-	$!obj.on-change.tap: -> $idx { block self, $idx };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-change.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
 	self
 }

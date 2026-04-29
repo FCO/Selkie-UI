@@ -41,6 +41,7 @@ use Selkie::UI::HeatmapBuilder;
 use Selkie::UI::HistogramBuilder;
 use Selkie::UI::AxisBuilder;
 use Selkie::UI::LegendBuilder;
+use Selkie::UI::Helpers;
 
 my %states;
 sub new-state(
@@ -94,15 +95,15 @@ multi Screen($node, Str :$name = "main", |c) is export {
 sub App(&block, |c) is export { AppBuilder.new(:&block, |c).run }
 
 sub OnFrame(&block) is export {
-	$*UI-APP.obj.on-frame(&block)
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$app.obj.on-frame(with-ui-context($app, $parent, &block))
 }
 
 sub OnKey(Str:D $spec, &handler, Str :$screen) is export {
 	my $app = $*UI-APP;
-	$app.obj.on-key($spec, -> |c {
-		my $*UI-APP = $app;
-		handler(|c)
-	}, |(:$screen with $screen))
+	my $parent = $*UI-PARENT;
+	$app.obj.on-key($spec, with-ui-context($app, $parent, &handler), |(:$screen with $screen))
 }
 
 sub Dispatch($event, *%payload) is export {
@@ -317,15 +318,15 @@ sub HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c) is export {
 	$builder
 }
 
-multi CardList(:$size, :$style, |c) is export {
-	my $builder = CardListBuilder.new: |c;
+multi CardList(&block, :$size, :$style, |c) is export {
+	my $builder = CardListBuilder.new: :&block, |c;
 	$builder.size(|$size) if $size.defined;
 	$builder.style(|$style) if $style.defined;
 	$builder
 }
 
-multi CardList(&block, :$size, :$style, |c) is export {
-	my $builder = CardListBuilder.new: :&block, |c;
+multi CardList(:$size, :$style, |c) is export {
+	my $builder = CardListBuilder.new: |c;
 	$builder.size(|$size) if $size.defined;
 	$builder.style(|$style) if $style.defined;
 	$builder

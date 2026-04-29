@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Modal;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ModalBuilder is Selkie::UI::Base;
 
@@ -17,7 +18,9 @@ method content($widget, Bool :$destroy = True) {
 }
 
 method on-close(&block) {
-	$!obj.on-close.tap: -> $ { block self };
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-close.tap: -> $ { with-ui-context($app, $parent, &block)(self) };
 	self
 }
 
