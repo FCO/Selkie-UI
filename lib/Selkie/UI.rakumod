@@ -42,6 +42,8 @@ use Selkie::UI::HistogramBuilder;
 use Selkie::UI::AxisBuilder;
 use Selkie::UI::LegendBuilder;
 use Selkie::UI::Helpers;
+use Selkie::UI::ReactiveArray;
+use Selkie::UI::ReactiveHash;
 
 my %states;
 sub new-state(
@@ -72,6 +74,34 @@ sub new-state(
 			$value
 		}
 	)
+}
+
+sub new-array-state(@default, :$name = UUID.new.Str,
+                    :$event = "ui/automatic/{ $name }/update") is export {
+	my $store = $*UI-APP.obj.store;
+
+	$store.register-handler: $event, -> $, %ev {
+		:db{ $name => %ev<value> }
+	}
+
+	$store.dispatch: $event, value => @default;
+	$store.tick;
+
+	ReactiveArray.new(:$store, :$name, :$event)
+}
+
+sub new-hash-state(%default, :$name = UUID.new.Str,
+                   :$event = "ui/automatic/{ $name }/update") is export {
+	my $store = $*UI-APP.obj.store;
+
+	$store.register-handler: $event, -> $, %ev {
+		:db{ $name => %ev<value> }
+	}
+
+	$store.dispatch: $event, value => %default;
+	$store.tick;
+
+	ReactiveHash.new(:$store, :$name, :$event)
 }
 
 sub Handler(Str() $name, &block) is export {

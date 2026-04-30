@@ -1,0 +1,27 @@
+use Test;
+use Selkie::UI;
+
+subtest 'new-array-state and new-hash-state are exported' => {
+	ok &new-array-state ~~ Callable, 'new-array-state is exported';
+	ok &new-hash-state ~~ Callable, 'new-hash-state is exported';
+}
+
+subtest 'ReactiveArray class construction and roles' => {
+	my $ra = Selkie::UI::ReactiveArray.new:
+		:store({}),
+		:name('test'),
+		:event('test/event');
+	ok $ra ~~ Positional, 'ReactiveArray does Positional';
+	ok $ra ~~ Iterable, 'ReactiveArray does Iterable';
+}
+
+subtest 'ReactiveHash class construction and roles' => {
+	my $rh = Selkie::UI::ReactiveHash.new:
+		:store({}),
+		:name('test'),
+		:event('test/event');
+	ok $rh ~~ Associative, 'ReactiveHash does Associative';
+	ok $rh ~~ Iterable, 'ReactiveHash does Iterable';
+}
+
+done-testing;

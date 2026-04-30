@@ -41,6 +41,8 @@
     "Selkie::UI::PlotBuilder": "lib/Selkie/UI/PlotBuilder.rakumod",
     "Selkie::UI::ProgressBarBuilder": "lib/Selkie/UI/ProgressBarBuilder.rakumod",
     "Selkie::UI::RadioGroupBuilder": "lib/Selkie/UI/RadioGroupBuilder.rakumod",
+    "Selkie::UI::ReactiveArray": "lib/Selkie/UI/ReactiveArray.rakumod",
+    "Selkie::UI::ReactiveHash": "lib/Selkie/UI/ReactiveHash.rakumod",
     "Selkie::UI::RichTextBuilder": "lib/Selkie/UI/RichTextBuilder.rakumod",
     "Selkie::UI::ScatterPlotBuilder": "lib/Selkie/UI/ScatterPlotBuilder.rakumod",
     "Selkie::UI::ScreenBuilder": "lib/Selkie/UI/ScreenBuilder.rakumod",
