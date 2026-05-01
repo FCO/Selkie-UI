@@ -27,28 +27,52 @@ method scroll-by(Int $delta) {
 	self
 }
 
-method scroll-to-start {
-	$!obj.scroll-to-start;
+multi method scroll-to-start(Bool $scroll = True) {
+	$!obj.scroll-to-start if $scroll;
 	self
 }
 
-method scroll-to-end {
-	$!obj.scroll-to-end;
+multi method scroll-to-start(&block) {
+	$.scroll-to-start: block self;
+	$.auto-subscribe: "scroll-to-start", { self.scroll-to-start: block self }
 	self
 }
+
+multi method scroll-to-end(Bool $scroll = True) {
+	$!obj.scroll-to-end if $scroll;
+	self
+}
+
+multi method scroll-to-end(&block) {
+	$.scroll-to-end: block self;
+	$.auto-subscribe: "scroll-to-end", { self.scroll-to-end: block self }
+	self
+}
+
+method clear { $!obj.clear }
 
 multi method content($widget) {
+	$.clear;
 	$!obj.add: $widget.obj;
 	self
 }
 
+multi method content(@widgets) {
+	$.clear;
+	$.add: $_ for @widgets;
+	self
+}
+
 multi method content(&block) {
+	my %*UI-PATHS;
 	my $*UI-PARENT = self;
 	my @*UI-NODES;
 	$ = block self;
-	for @*UI-NODES -> $node {
-		$!obj.add: $node.obj
+	$.content: @*UI-NODES;
+	$.auto-subscribe: "content", {
+		my @*UI-NODES;
+		$ = block self;
+		self.content: @*UI-NODES
 	}
-	$.auto-subscribe: "content", { self.content: &block }
 	self
 }

@@ -7,9 +7,14 @@ has Str  $.title;
 has Bool $.hide-top-border;
 has Bool $.hide-bottom-border;
 has Selkie::Widget::Border $.obj .= new:
-	|(:$!title with $!title),
-	|(:$!hide-top-border with $!hide-top-border),
-	|(:$!hide-bottom-border with $!hide-bottom-border);
+|(:$!title with $!title),
+|(:$!hide-top-border with $!hide-top-border),
+|(:$!hide-bottom-border with $!hide-bottom-border);
+has &.block;
+
+submethod TWEAK(:&block) {
+	self.content: $_ with &block;
+}
 
 multi method title(Str $title) {
 	$!obj.set-title: $title;
@@ -66,15 +71,4 @@ method !set-content-from-block(&block) {
 	with @*UI-NODES.head -> $node {
 		$!obj.set-content: $_ with $node.obj;
 	}
-}
-
-submethod TWEAK(:&block) {
-	return unless &block.defined;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	block self;
-	with @*UI-NODES.head -> $node {
-		$!obj.set-content: $_ with $node.obj;
-	}
-	self
 }

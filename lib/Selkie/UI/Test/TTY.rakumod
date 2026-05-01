@@ -7,12 +7,16 @@ class Selkie::UI::Test::TTY {
     has $!proc;
     has $!promise;
     has Bool $!quit-sent = False;
+    has Int $!exitcode;
+    has Str $!stdout = '';
+    has Str $!stderr = '';
 
     submethod BUILD(Str :$script, Int :$rows = 24, Int :$cols = 80) {
         $!script = $script;
         $!rows = $rows;
         $!cols = $cols;
         $!proc = Proc::Async.new('raku', '-I', 'lib', $!script, :pty(:cols($!cols), :rows($!rows)));
+        $!proc.stdout.Supply.tap: -> $buf { $!stdout ~= $buf };
         $!promise = $!proc.start;
         sleep 2;
     }
@@ -61,14 +65,21 @@ class Selkie::UI::Test::TTY {
     }
 
     method quit {
-        unless $!quit-sent {
-            $!quit-sent = True;
-            try $!proc.print("\x11");
-            sleep 1;
+        return if $!quit-sent;
+        $!quit-sent = True;
+        try $!proc.print("\x11");
+        sleep 1;
+        my $guard = 0;
+        while self.is-alive && $guard < 20 {
+            sleep 0.25;
+            $guard++;
         }
         if self.is-alive {
             try $!proc.kill(SIGKILL);
             sleep 1;
+        }
+        try {
+            $!exitcode = $!promise.result.exitcode;
         }
     }
 
@@ -80,6 +91,18 @@ class Selkie::UI::Test::TTY {
             return $status ~~ Planned;
         }
         return True;
+    }
+
+    method exitcode(--> Int) {
+        return $!exitcode // -1;
+    }
+
+    method stdout(--> Str) {
+        return $!stdout;
+    }
+
+    method stderr(--> Str) {
+        return $!stderr;
     }
 
     method cleanup {

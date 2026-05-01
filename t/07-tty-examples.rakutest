@@ -5,7 +5,7 @@ plan 10;
 
 # 1 — Counter: tab navigate buttons, enter to activate
 subtest 'Counter example' => {
-    plan 5;
+    plan 7;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/counter.raku>);
     ok $tty.is-alive, 'Counter script started';
 
@@ -30,12 +30,14 @@ subtest 'Counter example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Counter script terminated';
+    is $tty.exitcode, 0, 'Counter exited with code 0';
+    is $tty.stderr, '', 'Counter produced no stderr';
     $tty.cleanup;
 }
 
 # 2 — Tasks: navigate list, toggle, switch screens
 subtest 'Tasks example' => {
-    plan 5;
+    plan 7;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/tasks.raku>);
     ok $tty.is-alive, 'Tasks script started';
 
@@ -55,12 +57,14 @@ subtest 'Tasks example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Tasks script terminated';
+    is $tty.exitcode, 0, 'Tasks exited with code 0';
+    is $tty.stderr, '', 'Tasks produced no stderr';
     $tty.cleanup;
 }
 
 # 3 — Chat: clear, toggle theme, send message (exercises set-items fix)
 subtest 'Chat example' => {
-    plan 7;
+    plan 9;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/chat.raku>);
     ok $tty.is-alive, 'Chat script started';
 
@@ -89,12 +93,14 @@ subtest 'Chat example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Chat script terminated';
+    is $tty.exitcode, 0, 'Chat exited with code 0';
+    is $tty.stderr, '', 'Chat produced no stderr';
     $tty.cleanup;
 }
 
 # 4 — Dashboard: row activate, sort, palette, polling toggle (spinner fix)
 subtest 'Dashboard example' => {
-    plan 6;
+    plan 8;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/dashboard.raku>);
     ok $tty.is-alive, 'Dashboard script started';
 
@@ -120,12 +126,14 @@ subtest 'Dashboard example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Dashboard script terminated';
+    is $tty.exitcode, 0, 'Dashboard exited with code 0';
+    is $tty.stderr, '', 'Dashboard produced no stderr';
     $tty.cleanup;
 }
 
 # 5 — Job Runner: start job, wait (exercises show-percentage fix)
 subtest 'Job-runner example' => {
-    plan 5;
+    plan 7;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/job-runner.raku>);
     ok $tty.is-alive, 'Job-runner script started';
 
@@ -142,12 +150,14 @@ subtest 'Job-runner example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Job-runner script terminated';
+    is $tty.exitcode, 0, 'Job-runner exited with code 0';
+    is $tty.stderr, '', 'Job-runner produced no stderr';
     $tty.cleanup;
 }
 
 # 6 — File Viewer: open/close browser (exercises ScrollView.content fix)
 subtest 'File-viewer example' => {
-    plan 6;
+    plan 8;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/file-viewer.raku>);
     ok $tty.is-alive, 'File-viewer script started';
 
@@ -170,12 +180,14 @@ subtest 'File-viewer example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'File-viewer script terminated';
+    is $tty.exitcode, 0, 'File-viewer exited with code 0';
+    is $tty.stderr, '', 'File-viewer produced no stderr';
     $tty.cleanup;
 }
 
 # 7 — Settings: save, about modal, close, save again (exercises text(Str) fix)
 subtest 'Settings example' => {
-    plan 6;
+    plan 8;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/settings.raku>);
     ok $tty.is-alive, 'Settings script started';
 
@@ -198,12 +210,14 @@ subtest 'Settings example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Settings script terminated';
+    is $tty.exitcode, 0, 'Settings exited with code 0';
+    is $tty.stderr, '', 'Settings produced no stderr';
     $tty.cleanup;
 }
 
 # 8 — Charts: visual live updates
 subtest 'Charts example' => {
-    plan 4;
+    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/charts.raku>);
     ok $tty.is-alive, 'Charts script started';
 
@@ -216,12 +230,14 @@ subtest 'Charts example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Charts script terminated';
+    is $tty.exitcode, 0, 'Charts exited with code 0';
+    is $tty.stderr, '', 'Charts produced no stderr';
     $tty.cleanup;
 }
 
 # 9 — Text: type and submit
 subtest 'Text example' => {
-    plan 4;
+    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/text.raku>);
     ok $tty.is-alive, 'Text script started';
 
@@ -238,12 +254,14 @@ subtest 'Text example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Text script terminated';
+    is $tty.exitcode, 0, 'Text exited with code 0';
+    is $tty.stderr, '', 'Text produced no stderr';
     $tty.cleanup;
 }
 
 # 10 — Test: button press
 subtest 'Test example' => {
-    plan 4;
+    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/test.raku>);
     ok $tty.is-alive, 'Test script started';
 
@@ -258,6 +276,8 @@ subtest 'Test example' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Test script terminated';
+    is $tty.exitcode, 0, 'Test exited with code 0';
+    is $tty.stderr, '', 'Test produced no stderr';
     $tty.cleanup;
 }
 

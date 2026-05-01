@@ -5,7 +5,7 @@ plan 2;
 
 # 1 — selkie-ui-playground: code playground
 subtest 'selkie-ui-playground' => {
-    plan 4;
+    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<bin/selkie-ui-playground.raku>);
     ok $tty.is-alive, 'Playground script started';
 
@@ -19,12 +19,14 @@ subtest 'selkie-ui-playground' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Playground script terminated';
+    is $tty.exitcode, 0, 'Playground exited with code 0';
+    is $tty.stderr, '', 'Playground produced no stderr';
     $tty.cleanup;
 }
 
 # 2 — selkie-ui-grammar-playground: grammar playground
 subtest 'selkie-ui-grammar-playground' => {
-    plan 4;
+    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<bin/selkie-ui-grammar-playground.raku>);
     ok $tty.is-alive, 'Grammar playground script started';
 
@@ -38,6 +40,8 @@ subtest 'selkie-ui-grammar-playground' => {
     $tty.quit;
     sleep 1;
     nok $tty.is-alive, 'Grammar playground script terminated';
+    is $tty.exitcode, 0, 'Grammar playground exited with code 0';
+    is $tty.stderr, '', 'Grammar playground produced no stderr';
     $tty.cleanup;
 }
 

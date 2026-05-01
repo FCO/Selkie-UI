@@ -3,7 +3,11 @@ use Selkie::Layout::Split;
 
 unit class Selkie::UI::SplitBuilder is Selkie::UI::Base;
 
-has Selkie::Layout::Split $.obj .= new;
+has Str()                 $.orientation;
+has Rat                   $.ratio;
+has Selkie::Layout::Split $.obj .= new:
+|(:$!orientation with $!orientation),
+|(:$!ratio with $!ratio);
 has                       &.block;
 
 
@@ -11,9 +15,10 @@ submethod TWEAK(:&block) {
 	self.set: $_ with &block
 }
 
-multi method set($first, $second) {
-	$.first:  $first;
-	$.second: $second;
+multi method set($first?, $second?) {
+	$.first:  $_ with $first;
+	$.second: $_ with $second;
+	self
 }
 
 multi method set(&block) {
@@ -22,7 +27,7 @@ multi method set(&block) {
 	my $*UI-PARENT = self;
 	my @*UI-NODES;
 	$ = block self;
-	self.set: |@*UI-NODES;
+	self.set: |$_ with @*UI-NODES;
 	self.auto-subscribe: "add", {
 		my $*UI-APP = $app;
 		my @*UI-NODES;

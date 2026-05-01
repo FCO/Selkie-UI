@@ -1,4 +1,5 @@
 use Test;
+use Selkie::App;
 use Selkie::UI;
 use Selkie::Widget::Button;
 use Selkie::Widget::Text;
@@ -22,6 +23,7 @@ subtest 'Text builder with text method' => {
 }
 
 subtest 'Split builder exists' => {
+    my $*UI-APP;
     my $split = Split { Button.label: 'Test' };
     ok $split ~~ Selkie::UI::SplitBuilder, 'Split builder works';
 }

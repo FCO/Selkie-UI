@@ -5,12 +5,12 @@ use Selkie::UI::Helpers;
 
 unit class Selkie::UI::Base;
 
-submethod TWEAK(|) {
+submethod TWEAK(:$size, :$style, |) {
 	.push: self with @*UI-NODES
 }
 
 method auto-subscribe($method, &block) {
-	with $*UI-APP.obj.store {
+	with $*UI-APP.?obj.store {
 		my $app = $*UI-APP;
 		my $parent = $*UI-PARENT;
 		for %*UI-PATHS.keys -> $path {
@@ -25,7 +25,14 @@ method auto-subscribe($method, &block) {
 	block self
 }
 
-method style(|c) {
+multi method style(&block) {
+	my %*UI-PATHS := SetHash.new;
+	$.style: |block self;
+	$.auto-subscribe: "size", { self.style: |block self }
+	self
+}
+
+multi method style(|c) {
 	my $style = Selkie::Style.new: |c.hash;
 	if $.obj.^can('set-style') {
 		$.obj.set-style($style);
@@ -35,7 +42,19 @@ method style(|c) {
 	self
 }
 
-multi method size(UInt $fixed!) {
+multi method size(Pair $pair) {
+	$.size: |$pair
+}
+
+multi method fixed(UInt $fixed) { $.size: :$fixed }
+
+multi method fixed(&block) { $.size: -> $ { fixed => block self } }
+
+multi method size(UInt $fixed) {
+	$.size: :$fixed
+}
+
+multi method size(UInt :$fixed!) {
 	$.obj.update-sizing: Sizing.fixed($fixed);
 	self
 }
@@ -45,22 +64,37 @@ multi method size(Numeric :$percent!) {
 	self
 }
 
+multi method flex($flex) { $.size: :$flex }
+
+multi method flex(&block) { $.size: -> $ { flex => block self } }
+
 multi method size(:$flex is copy) {
 	my $value = $flex ~~ UInt ?? $flex.Int !! 1;
 	$.obj.update-sizing: Sizing.flex($value);
 	self
 }
 
-multi method size(&sizing-block) {
+multi method size(&block) {
 	my %*UI-PATHS := SetHash.new;
-	$ = sizing-block self;
-	$.auto-subscribe: "size", { self.size: sizing-block self }
+	$.size: |block self;
+	$.auto-subscribe: "size", { self.size: |block self }
 	self
 }
 
-method focus {
-	$*UI-APP.obj.focus: $.obj;
+multi method focus(Bool $focus = True) {
+	$*UI-APP.obj.focus: $.obj if $focus;
 	self
+}
+
+multi method focus(&block) {
+	my %*UI-PATHS := SetHash.new;
+	$ = block self;
+	$.auto-subscribe: "focus", { self.focus: block self }
+	self
+}
+
+method mark-dirty {
+	self.&selkie-obj.mark-dirty
 }
 
 =begin pod
