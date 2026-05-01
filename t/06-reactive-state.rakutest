@@ -1,27 +1,97 @@
 use Test;
 use Selkie::UI;
+use Selkie::Store;
 
-subtest 'new-array-state and new-hash-state are exported' => {
-	ok &new-array-state ~~ Callable, 'new-array-state is exported';
-	ok &new-hash-state ~~ Callable, 'new-hash-state is exported';
+# Mock App context for testing
+my $store = Selkie::Store.new;
+
+class MockApp {
+    method obj { self }
+    method store { $store }
 }
 
-subtest 'ReactiveArray class construction and roles' => {
-	my $ra = Selkie::UI::ReactiveArray.new:
-		:store({}),
-		:name('test'),
-		:event('test/event');
-	ok $ra ~~ Positional, 'ReactiveArray does Positional';
-	ok $ra ~~ Iterable, 'ReactiveArray does Iterable';
-}
+{
+    my $*UI-APP = MockApp.new();
 
-subtest 'ReactiveHash class construction and roles' => {
-	my $rh = Selkie::UI::ReactiveHash.new:
-		:store({}),
-		:name('test'),
-		:event('test/event');
-	ok $rh ~~ Associative, 'ReactiveHash does Associative';
-	ok $rh ~~ Iterable, 'ReactiveHash does Iterable';
+    subtest 'exports' => {
+        ok &new-array-state ~~ Callable, 'new-array-state is exported and callable';
+        ok &new-hash-state ~~ Callable, 'new-hash-state is exported and callable';
+    };
+
+    subtest 'ReactiveArray Positional' => {
+        my @a := new-array-state([1, 2, 3]);
+
+        is @a[0], 1, 'AT-POS returns correct element';
+        is @a[1], 2, 'AT-POS returns correct element at index 1';
+        is @a.elems, 3, 'elems returns correct count';
+
+        ok @a.EXISTS-POS(0), 'EXISTS-POS returns True for valid index';
+        ok !@a.EXISTS-POS(10), 'EXISTS-POS returns False for invalid index';
+
+        my @iter;
+        for @a -> $elem {
+            @iter.push: $elem;
+        }
+        is-deeply @iter, [1, 2, 3], 'iteration works correctly';
+    };
+
+    subtest 'ReactiveArray mutations' => {
+        my @a := new-array-state([1, 2, 3]);
+
+        @a[0] = 99;
+        is @a[0], 99, 'ASSIGN-POS updates element';
+
+        @a.push(4);
+        is @a.elems, 4, 'push increases elems';
+        is @a[3], 4, 'push adds element at end';
+
+        my $popped = @a.pop;
+        is $popped, 4, 'pop returns last element';
+        is @a.elems, 3, 'pop decreases elems';
+
+        my $shifted = @a.shift;
+        is $shifted, 99, 'shift returns first element';
+        is @a.elems, 2, 'shift decreases elems';
+        is @a[0], 2, 'shift updates first element';
+
+        @a.unshift(0);
+        is @a.elems, 3, 'unshift increases elems';
+        is @a[0], 0, 'unshift adds element at start';
+
+        my @spliced = @a.splice(1, 1, 99);
+        is @a.elems, 3, 'splice maintains elems with replacement';
+        is @a[1], 99, 'splice replaces element';
+    };
+
+    subtest 'ReactiveHash Associative' => {
+        my %h := new-hash-state({ :a(1), :b(2) });
+
+        is %h<a>, 1, 'AT-KEY returns correct value';
+        is %h<b>, 2, 'AT-KEY returns correct value for second key';
+
+        is-deeply %h.keys.sort, ('a', 'b'), 'keys returns all keys';
+        is-deeply %h.values.sort, (1, 2), 'values returns all values';
+
+        my @kv = %h.kv;
+        is @kv.elems, 4, 'kv returns key-value pairs';
+
+        ok %h.EXISTS-KEY('a'), 'EXISTS-KEY returns True for valid key';
+        ok !%h.EXISTS-KEY('z'), 'EXISTS-KEY returns False for invalid key';
+    };
+
+    subtest 'ReactiveHash mutations' => {
+        my %h := new-hash-state({ :a(1), :b(2) });
+
+        %h<a> = 99;
+        is %h<a>, 99, 'ASSIGN-KEY updates value';
+
+        %h<c> = 3;
+        is %h<c>, 3, 'ASSIGN-KEY adds new key';
+
+        my $deleted = %h<b>:delete;
+        is $deleted, 2, 'DELETE-KEY returns deleted value';
+        ok !%h.EXISTS-KEY('b'), 'DELETE-KEY removes key';
+    };
 }
 
 done-testing;

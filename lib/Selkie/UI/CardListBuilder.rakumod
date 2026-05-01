@@ -12,8 +12,7 @@ submethod TWEAK(:&block) {
 	return unless &block.defined;
 	my $*UI-PARENT = self;
 	my @*UI-NODES;
-	block self;
-	self.set-items: @*UI-NODES if @*UI-NODES;
+	self.set-items: &block;
 	self
 }
 
@@ -21,20 +20,32 @@ multi method add-item($widget, :$height!, :$root = $*UI-PARENT, :$border) {
 	my $root-widget = $root ~~ Selkie::Widget ?? $root !! $root.obj;
 	my $item-widget = $widget ~~ Selkie::Widget ?? $widget !! $widget.obj;
 	my $border-widget = $border.defined
-		?? ($border ~~ Selkie::Widget ?? $border !! $border.obj)
-		!! Nil;
-	$!obj.add-item($item-widget, :root($root-widget), :$height,
-		|(:$border-widget with $border-widget));
+	?? ($border ~~ Selkie::Widget ?? $border !! $border.obj)
+	!! Nil;
+	$!obj.add-item(
+		$item-widget.&selkie-obj,
+		:root($root-widget.&selkie-obj),
+		:$height,
+		|(:border-widget(.&selkie-obj) with $border-widget));
 	self
 }
 
 multi method add-item(&block, :$height!, :$root = $*UI-PARENT, :$border) {
+	my @*UI-NODES;
+	my $app = $*UI-APP;
 	my $caller-parent = CALLERS::<$*UI-PARENT> // $*UI-PARENT;
 	my $local-root = $root // $caller-parent;
-	my @*UI-NODES;
-	block self;
-	for @*UI-NODES -> $node {
-		self.add-item($node, :root($local-root), :$height, |(:$border with $border));
+	my @values = block self;
+	for @values -> $node {
+		self.add-item: $node, :root($local-root), :$height, |(:$border with $border);
+	}
+	$.auto-subscribe: "add-items", {
+		my @*UI-NODES;
+		my $*UI-APP = $app;
+		my @values = block self;
+		for @values -> $node {
+			self.add-item: $node, :root($local-root), :$height, |(:$border with $border);
+		}
 	}
 	self
 }
@@ -48,7 +59,12 @@ multi method set-items(@items) {
 		my $root = $item<root> // $*UI-PARENT;
 		my $height = $item<height>;
 		my $border = $item<border>;
-		self.add-item($widget, :$root, :$height, |(:$border with $border));
+		self.add-item:
+		$widget,
+		:$root,
+		:$height,
+		|(:$border with $border),
+		;
 	}
 	self
 }
@@ -56,9 +72,11 @@ multi method set-items(@items) {
 multi method set-items(&block) {
 	my $app = $*UI-APP;
 	my %*UI-PATHS := SetHash.new;
-	self.set-items(block self);
+	my @*UI-NODES;
+	self.set-items: block self;
 	$.auto-subscribe: "set-items", {
 		my $*UI-APP = $app;
+		my @*UI-NODES;
 		self.set-items: block self
 	}
 	self

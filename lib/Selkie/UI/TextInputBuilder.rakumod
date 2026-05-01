@@ -48,3 +48,22 @@ method on-change(&block) {
 }
 
 method clear { $!obj.clear }
+
+multi method text(--> Str) { $!obj.text }
+
+multi method text(Str $value) {
+	$!obj.set-text($value);
+	self
+}
+
+multi method text(&block) {
+	my %*UI-PATHS := SetHash.new;
+	$ = block self;
+	$.auto-subscribe: "text", { self.text: block self }
+	self
+}
+
+method set-text-silent(Str $text) {
+	$!obj.set-text-silent($text);
+	self
+}

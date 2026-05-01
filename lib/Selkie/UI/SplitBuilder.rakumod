@@ -4,7 +4,58 @@ use Selkie::Layout::Split;
 unit class Selkie::UI::SplitBuilder is Selkie::UI::Base;
 
 has Selkie::Layout::Split $.obj .= new;
-has                      &.block;
+has                       &.block;
+
+
+submethod TWEAK(:&block) {
+	self.set: $_ with &block
+}
+
+multi method set($first, $second) {
+	$.first:  $first;
+	$.second: $second;
+}
+
+multi method set(&block) {
+	my $app = $*UI-APP;
+	my %*UI-PATHS := SetHash.new;
+	my $*UI-PARENT = self;
+	my @*UI-NODES;
+	$ = block self;
+	self.set: |@*UI-NODES;
+	self.auto-subscribe: "add", {
+		my $*UI-APP = $app;
+		my @*UI-NODES;
+		$ = block self;
+		self.set: |@*UI-NODES
+	}
+	self
+}
+
+multi method add($node) {
+	$!obj.add: $node.obj;
+	self
+}
+
+multi method add(&block) {
+	my $app = $*UI-APP;
+	my %*UI-PATHS := SetHash.new;
+	my $*UI-PARENT = self;
+	my @*UI-NODES;
+	$ = block self;
+	for @*UI-NODES -> $node {
+		self.add: $node
+	}
+	self.auto-subscribe: "add", {
+		my $*UI-APP = $app;
+		my @*UI-NODES;
+		$ = block self;
+		for @*UI-NODES -> $node {
+			self.add: $node
+		}
+	}
+	self
+}
 
 multi method orientation(Str $orientation!) {
 	$!obj.orientation = $orientation;
@@ -30,22 +81,44 @@ multi method ratio(&block) {
 	self
 }
 
-method first($widget) {
+multi method first($widget) {
 	$!obj.set-first: $widget.obj;
 	self
 }
 
-method second($widget) {
+multi method first(&block) {
+	my $app = $*UI-APP;
+	my %*UI-PATHS := SetHash.new;
+	my $*UI-PARENT = self;
+	my @*UI-NODES;
+	$ = block self;
+	self.first: @*UI-NODES.head;
+	self.auto-subscribe: "first", {
+		my $*UI-APP = $app;
+		my @*UI-NODES;
+		$ = block self;
+		self.first: @*UI-NODES.head
+	}
+	self
+}
+
+multi method second($widget) {
 	$!obj.set-second: $widget.obj;
 	self
 }
 
-submethod TWEAK(:&block) {
+multi method second(&block) {
+	my $app = $*UI-APP;
+	my %*UI-PATHS := SetHash.new;
 	my $*UI-PARENT = self;
 	my @*UI-NODES;
-	block self;
-	for @*UI-NODES -> $node {
-		$!obj.add: $node.obj
+	$ = block self;
+	self.second: @*UI-NODES.head;
+	self.auto-subscribe: "second", {
+		my $*UI-APP = $app;
+		my @*UI-NODES;
+		$ = block self;
+		self.second: @*UI-NODES.head
 	}
 	self
 }

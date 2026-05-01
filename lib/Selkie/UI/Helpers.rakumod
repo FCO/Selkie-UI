@@ -7,3 +7,6 @@ sub with-ui-context($app, $parent, &block) is export {
 		block |c
 	}
 }
+
+multi selkie-obj($widget where *.^can: "obj") is export { $widget.obj }
+multi selkie-obj($widget)                     is export { $widget     }

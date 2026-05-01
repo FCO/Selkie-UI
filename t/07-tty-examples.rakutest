@@ -1,0 +1,264 @@
+use Test;
+use Selkie::UI::Test::TTY;
+
+plan 10;
+
+# 1 — Counter: tab navigate buttons, enter to activate
+subtest 'Counter example' => {
+    plan 5;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/counter.raku>);
+    ok $tty.is-alive, 'Counter script started';
+
+    $tty.send-key('tab');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Counter: decrement alive';
+
+    $tty.send-key('tab');
+    $tty.send-key('tab');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Counter: reset alive';
+
+    $tty.send-key('tab');
+    $tty.send-key('tab');
+    $tty.send-key('tab');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Counter: increment alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Counter script terminated';
+    $tty.cleanup;
+}
+
+# 2 — Tasks: navigate list, toggle, switch screens
+subtest 'Tasks example' => {
+    plan 5;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/tasks.raku>);
+    ok $tty.is-alive, 'Tasks script started';
+
+    $tty.send-key('down');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Tasks: toggle task alive';
+
+    $tty.send-key('ctrl+t');
+    sleep 0.5;
+    ok $tty.is-alive, 'Tasks: stats screen alive';
+
+    $tty.send-key('ctrl+t');
+    sleep 0.5;
+    ok $tty.is-alive, 'Tasks: back to list alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Tasks script terminated';
+    $tty.cleanup;
+}
+
+# 3 — Chat: clear, toggle theme, send message (exercises set-items fix)
+subtest 'Chat example' => {
+    plan 7;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/chat.raku>);
+    ok $tty.is-alive, 'Chat script started';
+
+    $tty.send-key('ctrl+l');
+    sleep 0.5;
+    ok $tty.is-alive, 'Chat: clear alive';
+
+    $tty.send-key('ctrl+t');
+    sleep 0.5;
+    ok $tty.is-alive, 'Chat: theme toggle alive';
+
+    $tty.send-text('Hello from test');
+    $tty.send-key('ctrl+enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Chat: send first message alive';
+
+    $tty.send-text('Second message');
+    $tty.send-key('ctrl+enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Chat: send second message alive';
+
+    $tty.send-key('ctrl+t');
+    sleep 0.5;
+    ok $tty.is-alive, 'Chat: toggle theme again alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Chat script terminated';
+    $tty.cleanup;
+}
+
+# 4 — Dashboard: row activate, sort, palette, polling toggle (spinner fix)
+subtest 'Dashboard example' => {
+    plan 6;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/dashboard.raku>);
+    ok $tty.is-alive, 'Dashboard script started';
+
+    $tty.send-key('tab');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Dashboard: activate row alive';
+
+    $tty.send-key('s');
+    sleep 0.5;
+    ok $tty.is-alive, 'Dashboard: sort alive';
+
+    $tty.send-key('ctrl+p');
+    sleep 0.5;
+    ok $tty.is-alive, 'Dashboard: palette alive';
+
+    $tty.send-key('escape');
+    sleep 0.3;
+    $tty.send-key('ctrl+space');
+    sleep 0.5;
+    ok $tty.is-alive, 'Dashboard: toggle polling alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Dashboard script terminated';
+    $tty.cleanup;
+}
+
+# 5 — Job Runner: start job, wait (exercises show-percentage fix)
+subtest 'Job-runner example' => {
+    plan 5;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/job-runner.raku>);
+    ok $tty.is-alive, 'Job-runner script started';
+
+    $tty.send-key('s');
+    sleep 1;
+    ok $tty.is-alive, 'Job-runner: start job alive';
+
+    sleep 1;
+    ok $tty.is-alive, 'Job-runner: step 1 alive';
+
+    sleep 1;
+    ok $tty.is-alive, 'Job-runner: running alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Job-runner script terminated';
+    $tty.cleanup;
+}
+
+# 6 — File Viewer: open/close browser (exercises ScrollView.content fix)
+subtest 'File-viewer example' => {
+    plan 6;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/file-viewer.raku>);
+    ok $tty.is-alive, 'File-viewer script started';
+
+    $tty.send-key('o');
+    sleep 0.5;
+    ok $tty.is-alive, 'File-viewer: browser opened alive';
+
+    $tty.send-key('escape');
+    sleep 0.5;
+    ok $tty.is-alive, 'File-viewer: modal closed alive';
+
+    $tty.send-key('o');
+    sleep 0.5;
+    ok $tty.is-alive, 'File-viewer: browser reopened alive';
+
+    $tty.send-key('escape');
+    sleep 0.5;
+    ok $tty.is-alive, 'File-viewer: modal closed again alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'File-viewer script terminated';
+    $tty.cleanup;
+}
+
+# 7 — Settings: save, about modal, close, save again (exercises text(Str) fix)
+subtest 'Settings example' => {
+    plan 6;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/settings.raku>);
+    ok $tty.is-alive, 'Settings script started';
+
+    $tty.send-key('ctrl+s');
+    sleep 0.5;
+    ok $tty.is-alive, 'Settings: save alive';
+
+    $tty.send-key('ctrl+h');
+    sleep 0.5;
+    ok $tty.is-alive, 'Settings: about modal alive';
+
+    $tty.send-key('escape');
+    sleep 0.5;
+    ok $tty.is-alive, 'Settings: close modal alive';
+
+    $tty.send-key('ctrl+s');
+    sleep 0.5;
+    ok $tty.is-alive, 'Settings: save again alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Settings script terminated';
+    $tty.cleanup;
+}
+
+# 8 — Charts: visual live updates
+subtest 'Charts example' => {
+    plan 4;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/charts.raku>);
+    ok $tty.is-alive, 'Charts script started';
+
+    sleep 2;
+    ok $tty.is-alive, 'Charts: after frames alive';
+
+    sleep 2;
+    ok $tty.is-alive, 'Charts: after more frames alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Charts script terminated';
+    $tty.cleanup;
+}
+
+# 9 — Text: type and submit
+subtest 'Text example' => {
+    plan 4;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/text.raku>);
+    ok $tty.is-alive, 'Text script started';
+
+    $tty.send-text('Hello world');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Text: submit alive';
+
+    $tty.send-text('Another message');
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Text: second submit alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Text script terminated';
+    $tty.cleanup;
+}
+
+# 10 — Test: button press
+subtest 'Test example' => {
+    plan 4;
+    my $tty = Selkie::UI::Test::TTY.new(:script<examples/test.raku>);
+    ok $tty.is-alive, 'Test script started';
+
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Test: press button alive';
+
+    $tty.send-key('enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Test: press again alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Test script terminated';
+    $tty.cleanup;
+}
+
+done-testing;

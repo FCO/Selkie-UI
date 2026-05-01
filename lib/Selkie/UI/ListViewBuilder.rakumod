@@ -49,3 +49,10 @@ method select-last {
 method cursor {
 	$!obj.cursor
 }
+
+method on-key(Str $key, &block) {
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-key($key, -> $ { with-ui-context($app, $parent, &block)(self, $) });
+	self
+}

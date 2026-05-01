@@ -4,9 +4,13 @@ use Selkie::Widget::ScrollView;
 unit class Selkie::UI::ScrollViewBuilder is Selkie::UI::Base;
 
 has Bool $.show-scrollbar;
-has Selkie::Widget::ScrollView $.obj .= new:
-	|(:$!show-scrollbar with $!show-scrollbar);
+has Selkie::Widget::ScrollView $.obj .= new: |(:$!show-scrollbar with $!show-scrollbar);
 has &.block;
+
+submethod TWEAK(:&block) {
+	self.content: $_ with &block;
+	self
+}
 
 method add($widget) {
 	$!obj.add: $widget.obj;
@@ -33,13 +37,18 @@ method scroll-to-end {
 	self
 }
 
-submethod TWEAK(:&block) {
-	return unless &block.defined;
+multi method content($widget) {
+	$!obj.add: $widget.obj;
+	self
+}
+
+multi method content(&block) {
 	my $*UI-PARENT = self;
 	my @*UI-NODES;
-	block self;
+	$ = block self;
 	for @*UI-NODES -> $node {
 		$!obj.add: $node.obj
 	}
+	$.auto-subscribe: "content", { self.content: &block }
 	self
 }

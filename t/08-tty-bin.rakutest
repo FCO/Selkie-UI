@@ -1,0 +1,44 @@
+use Test;
+use Selkie::UI::Test::TTY;
+
+plan 2;
+
+# 1 — selkie-ui-playground: code playground
+subtest 'selkie-ui-playground' => {
+    plan 4;
+    my $tty = Selkie::UI::Test::TTY.new(:script<bin/selkie-ui-playground.raku>);
+    ok $tty.is-alive, 'Playground script started';
+
+    $tty.send-text('say "hello from test"');
+    sleep 1;
+    ok $tty.is-alive, 'Playground: code entered alive';
+
+    sleep 1;
+    ok $tty.is-alive, 'Playground: still alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Playground script terminated';
+    $tty.cleanup;
+}
+
+# 2 — selkie-ui-grammar-playground: grammar playground
+subtest 'selkie-ui-grammar-playground' => {
+    plan 4;
+    my $tty = Selkie::UI::Test::TTY.new(:script<bin/selkie-ui-grammar-playground.raku>);
+    ok $tty.is-alive, 'Grammar playground script started';
+
+    sleep 2;
+    ok $tty.is-alive, 'Grammar playground: initialized alive';
+
+    $tty.send-key('ctrl+enter');
+    sleep 0.5;
+    ok $tty.is-alive, 'Grammar playground: compile alive';
+
+    $tty.quit;
+    sleep 1;
+    nok $tty.is-alive, 'Grammar playground script terminated';
+    $tty.cleanup;
+}
+
+done-testing;

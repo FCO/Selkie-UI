@@ -7,7 +7,8 @@
   ],
   "depends": [
     "Selkie",
-    "UUID"
+    "UUID",
+    "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
   ],
   "description": "Declarative DSL for building terminal user interfaces with the Selkie framework — reactive state management, auto-subscribe setters, and 38+ widget builders",
   "license": "Artistic-2.0",
@@ -57,7 +58,8 @@
     "Selkie::UI::TextInputBuilder": "lib/Selkie/UI/TextInputBuilder.rakumod",
     "Selkie::UI::TextStreamBuilder": "lib/Selkie/UI/TextStreamBuilder.rakumod",
     "Selkie::UI::ToastBuilder": "lib/Selkie/UI/ToastBuilder.rakumod",
-    "Selkie::UI::VBoxBuilder": "lib/Selkie/UI/VBoxBuilder.rakumod"
+     "Selkie::UI::VBoxBuilder": "lib/Selkie/UI/VBoxBuilder.rakumod",
+     "Selkie::UI::Test::TTY": "lib/Selkie/UI/Test/TTY.rakumod"
   },
   "resources": [
   ],
@@ -65,6 +67,7 @@
   "tags": [
   ],
   "test-depends": [
+    "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
   ],
   "version": "0.0.1"
 }

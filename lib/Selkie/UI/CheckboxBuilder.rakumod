@@ -24,6 +24,10 @@ multi method check(Bool $checked = True) {
 	self
 }
 
+multi method set-checked(Bool $checked = True) {
+	self.check($checked)
+}
+
 multi method check(&block) {
 	my %*UI-PATHS := SetHash.new;
 	$ = block self;

@@ -1,0 +1,30 @@
+use Test;
+use Selkie::UI;
+
+subtest 'TextStream max-lines setter' => {
+    my $stream = TextStream;
+    ok $stream ~~ Selkie::UI::TextStreamBuilder, 'TextStream builder works';
+    $stream.max-lines(123);
+    is $stream.obj.max-lines, 123, 'max-lines updated';
+}
+
+subtest 'ProgressBar frames-per-step setter' => {
+    my $bar = ProgressBar;
+    $bar.frames-per-step(5);
+    is $bar.obj.frames-per-step, 5, 'frames-per-step updated';
+}
+
+subtest 'Select select-index setter' => {
+    my $select = Select;
+    $select.set-items(<A B C>);
+    $select.select-index(2);
+    is $select.obj.selected, 2, 'select-index updated';
+}
+
+subtest 'ListView on-key returns self' => {
+    my $list = ListView;
+    my $result = $list.on-key('d', -> $ { });
+    is $result, $list, 'on-key returns self';
+}
+
+done-testing;

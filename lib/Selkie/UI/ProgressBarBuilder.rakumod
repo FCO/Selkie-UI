@@ -30,7 +30,7 @@ multi method indeterminate(&block) {
 }
 
 multi method show-percentage(Bool $show = True) {
-	$!obj.show-percentage = $show;
+	$!obj.^attributes.first(*.name eq '$!show-percentage').set_value: $!obj, $show;
 	self
 }
 
@@ -43,5 +43,10 @@ multi method show-percentage(&block) {
 
 method tick {
 	$!obj.tick;
+	self
+}
+
+method frames-per-step(Int $frames) {
+	$!obj.^attributes.first(*.name eq '$!frames-per-step').set_value: $!obj, $frames;
 	self
 }

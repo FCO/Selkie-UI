@@ -1,6 +1,7 @@
 use Selkie::UI::Base;
 use Selkie::UI::ScreenBuilder;
 use Selkie::App;
+use Selkie::Container;
 
 unit class Selkie::UI::AppBuilder is Selkie::UI::Base;
 
@@ -17,17 +18,25 @@ submethod TWEAK(:&block) {
 		given $node {
 			when Selkie::UI::ScreenBuilder {
 				$default //= .name;
-				$!obj.add-screen: .name, .screen.obj;
+				self.add-screen: .name, .screen.obj;
 			}
 			default {
 				die "More than one unnamed screen..." with $default;
 				$default = "main";
-				$!obj.add-screen: $default, .obj;
+				self.add-screen: $default, .obj;
 			}
 		}
 	}
 	$!obj.switch-screen: $default;
 	self
+}
+
+multi method add-screen($name, Selkie::Container $screen) {
+	$!obj.add-screen: $name, $screen
+}
+
+multi method add-screen($name, $) {
+	die "Error trying to add a non container as a screen called '$name'";
 }
 
 multi method theme(Selkie::Theme $theme) { $!obj.set-theme: $theme; self }

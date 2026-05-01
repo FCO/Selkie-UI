@@ -5,6 +5,11 @@ unit class Selkie::UI::TextStreamBuilder is Selkie::UI::Base;
 
 has Selkie::Widget::TextStream $.obj .= new;
 
+method max-lines(UInt $lines) {
+	$!obj.^attributes.first(*.name eq '$!max-lines').set_value: $!obj, $lines;
+	self
+}
+
 multi method append(&text) {
 	my %*UI-PATHS := SetHash.new;
 	$ = text self;

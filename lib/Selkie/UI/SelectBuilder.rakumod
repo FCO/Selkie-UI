@@ -23,6 +23,11 @@ method placeholder(Str $placeholder) {
 	self
 }
 
+method select-index(UInt $idx) {
+	$!obj.select-index($idx);
+	self
+}
+
 multi method on-change(&block) {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;

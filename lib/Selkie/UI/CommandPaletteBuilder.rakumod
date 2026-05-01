@@ -1,5 +1,8 @@
 use Selkie::UI::Base;
 use Selkie::Widget::CommandPalette;
+use Selkie::Widget::Modal;
+use Selkie::Widget::TextInput;
+use Selkie::Widget::ListView;
 use Selkie::UI::Helpers;
 
 unit class Selkie::UI::CommandPaletteBuilder is Selkie::UI::Base;
@@ -61,11 +64,14 @@ method reset {
 }
 
 method build(:$width-ratio, :$height-ratio) {
+	if $!modal.defined && !$!modal.content.defined {
+		self!reset-modal-cache;
+	}
 	$!modal = $!obj.build(
 		|(:$width-ratio  with $width-ratio ),
 		|(:$height-ratio with $height-ratio),
 	);
-	self
+	$!modal
 }
 
 method focusable-widget { $!obj.focusable-widget }
@@ -75,10 +81,10 @@ method focus {
 	self
 }
 
-method modal { $!modal // $.build }
+method modal { self.build }
 
 method show-modal {
-	$*UI-APP.obj.show-modal: $!modal;
+	$*UI-APP.obj.show-modal: self.modal;
 	self
 }
 
@@ -99,4 +105,14 @@ method !rebuild-commands {
 			!! %cmd<label>;
 		$!obj.add-command(%cmd<action>, :$label);
 	}
+}
+
+method !reset-modal-cache {
+	$!obj.^attributes.first(*.name eq '$!modal')
+		.set_value($!obj, Selkie::Widget::Modal);
+	$!obj.^attributes.first(*.name eq '$!input')
+		.set_value($!obj, Selkie::Widget::TextInput);
+	$!obj.^attributes.first(*.name eq '$!list')
+		.set_value($!obj, Selkie::Widget::ListView);
+	$!modal = Selkie::Widget::Modal;
 }
