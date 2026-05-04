@@ -13,32 +13,20 @@ multi method label(Str $label) {
 }
 
 multi method label(&label-block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = label-block self;
-	$.auto-subscribe: "label", { self.label: label-block self }
-	self
+	$.auto-subscribe: "label", with-ui-context $*UI-APP, $*UI-PARENT, { self.label: label-block self }
 }
 
-multi method check(Bool $checked = True) {
-	$!obj.set-checked($checked);
+multi method check(Bool() $checked = True) {
+	$!obj.set-checked: $_ with $checked;
 	self
-}
-
-multi method set-checked(Bool $checked = True) {
-	self.check($checked)
 }
 
 multi method check(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "check", { self.check: block self }
-	self
+	$.auto-subscribe: "check", with-ui-context $*UI-APP, $*UI-PARENT, { self.check: block self }
 }
 
 multi method on-change(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-change.tap: -> $checked { with-ui-context($app, $parent, &block)(self, $checked) };
+	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $checked { block self, $checked }
 	self
 }
 

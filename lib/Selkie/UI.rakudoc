@@ -41,15 +41,44 @@ change.
 
 =head1 State Management
 
-C<new-state> creates reactive state variables that automatically dispatch updates and
-re-render affected UI elements.
+=head2 new-state
 
-For compound values (arrays, hashes), assign a new value to trigger updates. In-place
-mutations do not dispatch.
+C<new-state($default, :$name, :$event)> creates a reactive scalar state variable
+that automatically dispatches updates and re-renders affected UI elements. Returns
+a Proxy where reads track the state path in C<@*UI-PATHS> and writes dispatch
+events through the store.
 
 =begin code :lang<raku>
-my $items := new-state [];
-$items = [ |$items, 'new' ];
+my $counter := new-state 0;
+$counter = 42;
+=end code
+
+=head2 new-array-state
+
+C<new-array-state(@default, :$name, :$event)> returns a L<ReactiveArray> object
+that implements C<Positional> and C<Iterable>. Bind with C<:=> to an C<@>-sigiled
+variable. Mutation methods (C<ASSIGN-POS>, C<push>, C<pop>, C<shift>, C<unshift>,
+C<splice>) dispatch fresh values to the store.
+
+For nested mutations, use the extract-modify-reassign pattern:
+
+=begin code :lang<raku>
+my @tasks := new-array-state [{:title<A>,:!done},{:title<B>,:!done}];
+my %task = @tasks[0];
+%task<done> = True;
+@tasks[0] = %task;   # ASSIGN-POS dispatches fresh Array
+=end code
+
+=head2 new-hash-state
+
+C<new-hash-state(%default, :$name, :$event)> returns a L<ReactiveHash> object
+that implements C<Associative> and C<Iterable>. Bind with C<:=> to a C<%>-sigiled
+variable. Mutation methods (C<ASSIGN-KEY>, C<DELETE-KEY>) dispatch fresh values
+to the store.
+
+=begin code :lang<raku>
+my %config := new-hash-state {:theme<dark>, :refresh(30)};
+%config<theme> = 'light';   # ASSIGN-KEY dispatches fresh Hash
 =end code
 
 =head1 Block-Based Setters
@@ -103,10 +132,18 @@ chainable builder object that wraps the underlying widget.
 
 App helpers that interact with the runtime:
 
+=item1 C<Handler> — Register a store event handler
+=item1 C<Detached> — Create isolated UI nodes without parent attachment
 =item1 C<OnKey> — Register global key handlers
 =item1 C<OnFrame> — Register a per-frame callback
 =item1 C<Dispatch> — Dispatch events to the store
 =item1 C<Tick> — Tick the store immediately
+=item1 C<ShowModal> — Open a modal dialog
+=item1 C<CloseModal> — Close the currently open modal
+=item1 C<Focus> — Focus a specific widget
+=item1 C<FocusNext> — Move focus to the next widget
+=item1 C<FocusPrevious> — Move focus to the previous widget
+=item1 C<SwitchScreen> — Switch to a named screen
 =item1 C<Quit> — Quit the application
 =item1 C<Toast> — Show a transient toast message
 
@@ -192,7 +229,9 @@ the button. The handler increments the counter with C<++$val>, triggering a UI u
 =head2 ListView with reactive items
 
 This example binds a list view to a reactive array. When the array changes, the list
-updates automatically.
+updates automatically. For reactive array data, consider using L<new-array-state>
+instead of C<new-state> — it provides direct mutation methods (C<push>, C<shift>,
+C<splice>) that dispatch updates automatically.
 
 =begin code :lang<raku>
 use Selkie::UI;
@@ -430,9 +469,26 @@ Creates a reactive state variable. Returns a Proxy that auto-tracks reads and di
 events on writes. Requires an active C<App> context.
 
 =for head2 :numbered
+new-array-state(@default, :$name, :$event)
+
+Creates a reactive array state. Returns a C<ReactiveArray> that implements C<Positional>
+and C<Iterable>. Bind with C<:=> to an C<@>-sigiled variable.
+
+=for head2 :numbered
+new-hash-state(%default, :$name, :$event)
+
+Creates a reactive hash state. Returns a C<ReactiveHash> that implements C<Associative>
+and C<Iterable>. Bind with C<:=> to a C<%>-sigiled variable.
+
+=for head2 :numbered
 Handler(Str $name, &block)
 
 Registers a store event handler for the given event name.
+
+=for head2 :numbered
+Detached(&block)
+
+Creates isolated UI node contexts without parent attachment.
 
 =for head2 :numbered
 OnKey(Str:D $spec, &handler, Str :$screen)
@@ -455,14 +511,39 @@ Tick
 Triggers an immediate store tick (re-render cycle).
 
 =for head2 :numbered
-Quit
+ShowModal($modal)
 
-Exits the TUI application gracefully.
+Opens a modal dialog from a builder or widget.
 
 =for head2 :numbered
 CloseModal
 
 Closes the currently open modal dialog.
+
+=for head2 :numbered
+Focus($widget)
+
+Focuses a specific widget.
+
+=for head2 :numbered
+FocusNext
+
+Moves focus to the next focusable widget.
+
+=for head2 :numbered
+FocusPrevious
+
+Moves focus to the previous focusable widget.
+
+=for head2 :numbered
+SwitchScreen(Str $name)
+
+Switches to a named screen.
+
+=for head2 :numbered
+Quit
+
+Exits the TUI application gracefully.
 
 =AUTHOR Fernando Correa de Oliveira
 

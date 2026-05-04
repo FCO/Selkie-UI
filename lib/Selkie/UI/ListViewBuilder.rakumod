@@ -4,8 +4,12 @@ use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ListViewBuilder is Selkie::UI::Base;
 
+has &.block;
 has Selkie::Widget::ListView $.obj .= new;
 
+submethod TWEAK(:&block, |) {
+	self.set-items: $_ with &block
+}
 
 multi method set-items(@items) {
 	$!obj.set-items: @items;
@@ -13,30 +17,21 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	self.set-items: block self;
-	$.auto-subscribe: "set-items", {
-		my $*UI-APP = $app;
+	$.auto-subscribe: "set-items", with-ui-context $*UI-APP, $*UI-PARENT, {
 		self.set-items: block self
 	}
-	self
 }
 
 multi method on-select(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-select.tap: -> $idx {
-		with-ui-context($app, $parent, &block)(self, $idx)
+	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx {
+		block self, $idx
 	}
 	self
 }
 
 multi method on-activate(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-activate.tap: -> $idx {
-		with-ui-context($app, $parent, &block)(self, $idx)
+	$!obj.on-activate.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx {
+		block self, $idx
 	}
 	self
 }

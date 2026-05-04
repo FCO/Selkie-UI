@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Image;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ImageBuilder is Selkie::UI::Base;
 
@@ -22,10 +23,7 @@ multi method set-file(Str $file) {
 }
 
 multi method file(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "file", { self.file: block self }
-	self
+	$.auto-subscribe: "file", with-ui-context $*UI-APP, $*UI-PARENT, { self.file: block self }
 }
 
 method clear-image {

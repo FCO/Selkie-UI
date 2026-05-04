@@ -30,9 +30,8 @@ method build(
 method on-select(&block) {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-select.tap: -> $path {
-		my &code = with-ui-context $app, $parent, &block;
-		code self, $path
+	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $path {
+		block self, $path
 	}
 	self
 }

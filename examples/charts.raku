@@ -42,8 +42,8 @@ App {
 
 	my $tick := new-state 0;
 	my @load := new-array-state seed-samples(-> $i { (sin($i * 0.3) * 30 + 50).Int });
-	my @p50 := new-array-state (^WINDOW-SIZE).map({ (sin($_ * 0.2 + 1) * 20 + 30).Int });
-	my @p99 := new-array-state (^WINDOW-SIZE).map({
+	my @p50  := new-array-state (^WINDOW-SIZE).map({ (sin($_ * 0.2 + 1) * 20 + 30).Int });
+	my @p99  := new-array-state (^WINDOW-SIZE).map({
 		my $gap = (cos($_ * 0.11) * 15 + 25).Int.abs;
 		(@p50[$_] + $gap) min 95;
 	});
@@ -58,7 +58,7 @@ App {
 		HBox :1size, {
 			Text(:text('load: '), :6size, :style(:fg(0x808080)));
 			Sparkline(:0min, :100max)
-				.data({ @load.list })
+				.data({ @load })
 				.size(:flex);
 		}
 

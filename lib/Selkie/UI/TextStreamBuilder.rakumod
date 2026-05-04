@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::TextStream;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::TextStreamBuilder is Selkie::UI::Base;
 
@@ -11,10 +12,7 @@ method max-lines(UInt $lines) {
 }
 
 multi method append(&text) {
-	my %*UI-PATHS := SetHash.new;
-	$ = text self;
-	$.auto-subscribe: "append", { self.append: text self }
-	self
+	$.auto-subscribe: "append", with-ui-context $*UI-APP, $*UI-PARENT, { self.append: text self }
 }
 
 multi method append(Str() $text) {

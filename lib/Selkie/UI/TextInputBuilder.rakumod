@@ -9,9 +9,9 @@ has Str                       $.placeholder;
 has Sizing                    $.sizing;
 has Str                       $.mask-char;
 has Selkie::Widget::TextInput $.obj .= new:
-	|(:$!placeholder with $!placeholder),
-	|(:$!sizing      with $!sizing     ),
-	|(:$!mask-char   with $!mask-char  );
+|(:$!placeholder with $!placeholder),
+|(:$!sizing      with $!sizing     ),
+|(:$!mask-char   with $!mask-char  );
 
 multi method mask(Str :$char!) {
 	$!obj .= new: |(:$!placeholder with $!placeholder), |(:$!sizing with $!sizing), |(:$char with $char);
@@ -19,21 +19,16 @@ multi method mask(Str :$char!) {
 }
 
 multi method mask(&mask-block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	$ = mask-block self;
-	$.auto-subscribe: "mask", {
-		my $*UI-APP = $app;
+	$.auto-subscribe: "mask", with-ui-context $*UI-APP, $*UI-PARENT, {
 		self.mask: mask-block self
 	}
-	self
 }
 
 method on-submit(&block) {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-submit.tap: -> $text {
-		with-ui-context($app, $parent, &block)(self, $text)
+	$!obj.on-submit.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $text {
+		block self, $text
 	}
 	self
 }
@@ -41,15 +36,21 @@ method on-submit(&block) {
 method on-change(&block) {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-change.tap: -> $text {
-		with-ui-context($app, $parent, &block)(self, $text)
+	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $text {
+		block self, $text
 	}
 	self
 }
 
-method clear { $!obj.clear }
+multi method clear(Bool() $clear = True) { $!obj.clear if $clear }
+
+multi method clear(&block) {
+	$.auto-subscribe: "clear", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: "" if block self }
+}
 
 multi method text(--> Str) { $!obj.text }
+
+multi method text(Any:U) { }
 
 multi method text(Str $value) {
 	$!obj.set-text($value);
@@ -57,13 +58,20 @@ multi method text(Str $value) {
 }
 
 multi method text(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "text", { self.text: block self }
+	$.auto-subscribe: "text", with-ui-context $*UI-APP, $*UI-PARENT, {
+		self.text: block self
+	}
+}
+
+multi method text-silent(Any:U) { }
+
+multi method text-silent(Str() $text) {
+	$!obj.set-text-silent: $text;
 	self
 }
 
-method set-text-silent(Str $text) {
-	$!obj.set-text-silent($text);
-	self
+multi method text-silent(&block) {
+	$.auto-subscribe: "text-silent", with-ui-context $*UI-APP, $*UI-PARENT, {
+		self.text-silent: block self
+	}
 }

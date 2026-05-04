@@ -12,27 +12,19 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
-	my %*UI-PATHS := SetHash.new;
-	self.set-items(block self);
-	$.auto-subscribe: "set-items", { self.set-items(block self) }
+	$.auto-subscribe: "set-items", with-ui-context $*UI-APP, $*UI-PARENT, { self.set-items: block self }
+}
+
+multi method select(UInt $idx) {
+	$!obj.select-index: $_ with $idx;
 	self
 }
 
-multi method selected(UInt $idx) {
-	$!obj.set-selected($idx);
-	self
-}
-
-multi method selected(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "selected", { self.selected: block self }
-	self
+multi method select(&block) {
+	$.auto-subscribe: "select", with-ui-context $*UI-APP, $*UI-PARENT, { self.select: block self }
 }
 
 multi method on-change(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-change.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
+	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx };
 	self
 }

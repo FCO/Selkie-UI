@@ -6,9 +6,7 @@ unit class Selkie::UI::MultiLineInputBuilder is Selkie::UI::Base;
 
 has Str  $.placeholder;
 has UInt $.max-lines;
-has Selkie::Widget::MultiLineInput $.obj .= new:
-	|(:$!placeholder with $!placeholder),
-	|(:$!max-lines with $!max-lines);
+has Selkie::Widget::MultiLineInput $.obj .= new: |(:$!placeholder with $!placeholder), |(:$!max-lines with $!max-lines);
 
 method cursor(UInt :$row, UInt :$col) {
 	my $attr-row = $!obj.^attributes.first: *.name eq '$!cursor-row';
@@ -25,16 +23,21 @@ multi method text(Str $text) {
 }
 
 multi method text(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "text", { self.text: block self }
-	self
+	$.auto-subscribe: "text", with-ui-context $*UI-APP, $*UI-PARENT, { self.text: block self }
 }
 
-method text-silent(Str $text) {
+multi method text-silent(Any:U) {}
+
+multi method text-silent(Str $text) {
 	$!obj.set-text-silent($text);
 	self
 }
+
+multi method text-silent(&block) {
+	$.auto-subscribe: "text-silent", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: block self }
+}
+
+multi method placeholder(Any:U) {}
 
 multi method placeholder(Str $placeholder) {
 	$!obj.placeholder = $placeholder;
@@ -42,24 +45,23 @@ multi method placeholder(Str $placeholder) {
 }
 
 multi method placeholder(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "placeholder", { self.placeholder: block self }
-	self
+	$.auto-subscribe: "placeholder", with-ui-context $*UI-APP, $*UI-PARENT, { self.placeholder: block self }
 }
 
-method clear { $!obj.clear }
+multi method clear(Bool() $clear = True) { $!obj.clear if $clear }
+
+multi method clear(&block) {
+	$.auto-subscribe: "clear", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: "" if block self }
+}
 
 method on-submit(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-submit.tap: -> $text { with-ui-context($app, $parent, &block)(self, $text) };
+	$!obj.on-submit.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $text { block self, $text };
 	self
 }
 
 method on-change(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-change.tap: -> $text { with-ui-context($app, $parent, &block)(self, $text) };
+	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $text {
+		block self, $text
+	}
 	self
 }

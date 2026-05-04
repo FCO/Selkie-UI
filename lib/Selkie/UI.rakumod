@@ -66,7 +66,7 @@ sub new-state(
 
 	return-rw Proxy.new(
 		FETCH => sub ($) {
-			.{$name} = True with %*UI-PATHS;
+			.push: ($name,) with @*UI-PATHS;
 			try $store.get-in: $name
 		},
 		STORE => sub ($, $value) {
@@ -119,9 +119,7 @@ sub Detached(&block) is export {
 }
 
 multi Screen(&block, Str :$name = "main", |c) is export {
-	my @*UI-NODES;
-	block $*UI-APP;
-	ScreenBuilder.new: :$name, :screen(@*UI-NODES.head), |c
+	ScreenBuilder.new: :$name, :&block, |c
 }
 
 multi Screen($node, Str :$name = "main", |c) is export {
@@ -159,24 +157,32 @@ sub CloseModal is export {
 }
 
 sub ShowModal($modal) is export {
-	$*UI-APP.obj.show-modal: $modal
+	$*UI-APP.obj.show-modal: .?modal // $_ with $modal.&selkie-obj
 }
 
 sub Focus($widget) is export {
 	$*UI-APP.obj.focus: selkie-obj $widget
 }
 
+sub FocusNext is export {
+	$*UI-APP.obj.focus-next
+}
+
+sub FocusPrevious is export {
+	$*UI-APP.obj.focus-prev
+}
+
 sub SwitchScreen(Str $name) is export {
 	$*UI-APP.obj.switch-screen: $name
 }
 
-sub Toast(Str $message, Numeric :$duration = 3e0) is export {
-	$*UI-APP.obj.toast($message, :duration($duration.Num))
+sub Toast(Str $message, Numeric :$duration = 3.0) is export {
+	.obj.toast: $message, :duration($duration.Num) with $*UI-APP
 }
 
 sub ss($obj, :$size, :$style, |) {
-	$obj.size:  $_ with $size;
-	$obj.style: $_ with $style;
+	$obj.size:  |$_ with $size;
+	$obj.style: |$_ with $style;
 	$obj
 }
 
@@ -194,7 +200,7 @@ sub Table(:$show-scrollbar, |c)   is export { ss |c, TableBuilder.new:      |(:$
 sub RadioGroup(|c)                is export { ss |c, RadioGroupBuilder.new:                                                 |c }
 sub Select(|c)                    is export { ss |c, SelectBuilder.new:                                                     |c }
 sub ProgressBar(|c)               is export { ss |c, ProgressBarBuilder.new:                                                |c }
-sub ListView(|c)                  is export { ss |c, ListViewBuilder.new:                                                   |c }
+sub ListView(&block, |c)          is export { ss |c, ListViewBuilder.new:   |(:&block with &block),                         |c }
 sub ConfirmModal(|c)              is export { ss |c, ConfirmModalBuilder.new:                                               |c }
 sub TabBar(|c)                    is export { ss |c, TabBarBuilder.new:                                                     |c }
 sub CommandPalette(|c)            is export { ss |c, CommandPaletteBuilder.new:                                             |c }
@@ -208,8 +214,9 @@ multi Border(&block?, :$title, :$hide-top-border, :$hide-bottom-border, |c) is e
 	|c
 }
 
-sub Modal(:$width-ratio, :$height-ratio, :$dim-background, |c) is export {
+sub Modal(&block?, :$width-ratio, :$height-ratio, :$dim-background, |c) is export {
 	ss |c, ModalBuilder.new:
+	|(:&block with &block),
 	|(:$width-ratio with $width-ratio),
 	|(:$height-ratio with $height-ratio),
 	|(:$dim-background with $dim-background),
@@ -450,7 +457,7 @@ See C<lib/Selkie/UI.rakudoc> for comprehensive documentation.
 =head3 C<new-state($default, :$name, :$event)>
 
 Creates a reactive state variable backed by the Selkie store. Returns a Proxy
-where C<FETCH> tracks access in C<%*UI-PATHS> (for auto-subscription) and
+where C<FETCH> tracks access in C<@*UI-PATHS> (for auto-subscription) and
 C<STORE> dispatches update events. Requires an active C<$*UI-APP> context.
 
 For compound values (arrays, hashes), assign a B<new> value to trigger updates.
@@ -462,7 +469,7 @@ my $items   := new-state [];     # compound — assign new array to update
 =head3 Builder Auto-Subscribe
 
 Builder methods accept blocks instead of literal values. When a block is provided,
-any C<new-state> variables read during evaluation are tracked via C<%*UI-PATHS>.
+any C<new-state> variables read during evaluation are tracked via C<@*UI-PATHS>.
 The builder subscribes to those state paths and re-runs the block when they change.
 
 my $counter := new-state 0;

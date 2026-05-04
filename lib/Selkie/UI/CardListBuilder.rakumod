@@ -31,17 +31,9 @@ multi method add-item($widget, :$height!, :$root = $*UI-PARENT, :$border) {
 }
 
 multi method add-item(&block, :$height!, :$root = $*UI-PARENT, :$border) {
-	my @*UI-NODES;
-	my $app = $*UI-APP;
 	my $caller-parent = CALLERS::<$*UI-PARENT> // $*UI-PARENT;
 	my $local-root = $root // $caller-parent;
-	my @values = block self;
-	for @values -> $node {
-		self.add-item: $node, :root($local-root), :$height, |(:$border with $border);
-	}
-	$.auto-subscribe: "add-items", {
-		my @*UI-NODES;
-		my $*UI-APP = $app;
+	$.auto-subscribe: "add-items", with-ui-context $*UI-APP, $*UI-PARENT, {
 		my @values = block self;
 		for @values -> $node {
 			self.add-item: $node, :root($local-root), :$height, |(:$border with $border);
@@ -70,13 +62,9 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
 	my @*UI-NODES;
 	self.set-items: block self;
-	$.auto-subscribe: "set-items", {
-		my $*UI-APP = $app;
-		my @*UI-NODES;
+	$.auto-subscribe: "set-items", with-ui-context $*UI-APP, $*UI-PARENT, {
 		self.set-items: block self
 	}
 	self
@@ -97,12 +85,7 @@ multi method set-item-height(Int $idx, Int $height) {
 }
 
 multi method set-item-height(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	my %values = block self;
-	self.set-item-height(|%values);
-	$.auto-subscribe: "set-item-height", {
-		my $*UI-APP = $app;
+	$.auto-subscribe: "set-item-height", with-ui-context $*UI-APP, $*UI-PARENT, {
 		my %next = block self;
 		self.set-item-height: |%next
 	}
@@ -115,14 +98,9 @@ multi method select-index(Int $idx) {
 }
 
 multi method select-index(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "select-index", {
-		my $*UI-APP = $app;
+	$.auto-subscribe: "select-index", with-ui-context $*UI-APP, $*UI-PARENT, {
 		self.select-index: block self
 	}
-	self
 }
 
 method select-first {
@@ -146,10 +124,8 @@ method scroll-down {
 }
 
 method on-select(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-select.tap: -> $idx {
-		with-ui-context($app, $parent, &block)(self, $idx)
+	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx {
+		block self, $idx
 	}
 	self
 }

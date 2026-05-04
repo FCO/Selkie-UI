@@ -23,7 +23,7 @@ App {
 			$error = '';
 		} else {
 			my $content = try { $path.IO.slurp };
-			if $content.defined {
+			if $content {
 				$kind = 'text';
 				$text = $content;
 				$error = '';

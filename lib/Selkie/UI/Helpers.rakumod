@@ -4,6 +4,7 @@ sub with-ui-context($app, $parent, &block) is export {
 	-> |c {
 		my $*UI-APP = $app;
 		my $*UI-PARENT = $parent;
+		my @*UI-NODES;
 		block |c
 	}
 }

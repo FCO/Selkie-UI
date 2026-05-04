@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Border;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::BorderBuilder is Selkie::UI::Base;
 
@@ -22,10 +23,7 @@ multi method title(Str $title) {
 }
 
 multi method title(&title-block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = title-block self;
-	$.auto-subscribe: "title", { self.title: title-block self }
-	self
+	$.auto-subscribe: "title", with-ui-context $*UI-APP, $*UI-PARENT, { self.title: title-block self }
 }
 
 multi method hide-top-border(Bool $hide = True) {
@@ -34,10 +32,7 @@ multi method hide-top-border(Bool $hide = True) {
 }
 
 multi method hide-top-border(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "hide-top-border", { self.hide-top-border: block self }
-	self
+	$.auto-subscribe: "hide-top-border", with-ui-context $*UI-APP, $*UI-PARENT, { self.hide-top-border: block self }
 }
 
 multi method hide-bottom-border(Bool $hide = True) {
@@ -46,10 +41,7 @@ multi method hide-bottom-border(Bool $hide = True) {
 }
 
 multi method hide-bottom-border(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "hide-bottom-border", { self.hide-bottom-border: block self }
-	self
+	$.auto-subscribe: "hide-bottom-border", with-ui-context $*UI-APP, $*UI-PARENT, { self.hide-bottom-border: block self }
 }
 
 multi method content($widget, Bool :$destroy = True) {
@@ -58,10 +50,7 @@ multi method content($widget, Bool :$destroy = True) {
 }
 
 multi method content(&block) {
-	my %*UI-PATHS := SetHash.new;
-	self!set-content-from-block(&block);
-	$.auto-subscribe: "content", { self!set-content-from-block(&block) }
-	self
+	$.auto-subscribe: "content", with-ui-context $*UI-APP, $*UI-PARENT, { self!set-content-from-block(&block) }
 }
 
 method !set-content-from-block(&block) {

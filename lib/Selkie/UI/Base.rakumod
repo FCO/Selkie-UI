@@ -9,36 +9,37 @@ submethod TWEAK(:$size, :$style, |) {
 	.push: self with @*UI-NODES
 }
 
+my %count;
 method auto-subscribe($method, &block) {
 	with $*UI-APP.?obj.store {
 		my $app = $*UI-APP;
 		my $parent = $*UI-PARENT;
-		for %*UI-PATHS.keys -> $path {
+		my @*UI-PATHS := my @paths;
+		block;
+		@paths .= unique: :with(&[eqv]);
+		for @paths -> @path {
+			my @*UI-PATHS;
+			my $base = "{ $.obj.WHERE }-{ self.^name }-{ $method }-{ @path.join: "-" }";
 			.subscribe-path-callback(
-				"{ $.obj.WHERE }-{ self.^name }-{ $method }-{ $path }",
-				[ $path ],
+				"{ $base }-{ ++%count{$base} }",
+				@path,
 				with-ui-context($app, $parent, &block),
 				$.obj ~~ Selkie::Widget ?? $.obj !! Selkie::Widget
-			)
+			);
 		}
+	} else {
+		block;
 	}
-	block self
+	self
 }
 
 multi method style(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$.style: |block self;
-	$.auto-subscribe: "size", { self.style: |block self }
-	self
+	$.auto-subscribe: "style", with-ui-context $*UI-APP, $*UI-PARENT, { self.style: |block self }
 }
 
 multi method style(|c) {
 	my $style = Selkie::Style.new: |c.hash;
-	if $.obj.^can('set-style') {
-		$.obj.set-style($style);
-	} elsif $.obj.^can('style') {
-		try { $.obj.style = $style };
-	}
+	try $.obj.set-style: $style;
 	self
 }
 
@@ -75,22 +76,16 @@ multi method size(:$flex is copy) {
 }
 
 multi method size(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$.size: |block self;
-	$.auto-subscribe: "size", { self.size: |block self }
-	self
+	$.auto-subscribe: "size", with-ui-context $*UI-APP, $*UI-PARENT, { self.size: |block self }
 }
 
-multi method focus(Bool $focus = True) {
+multi method focus(Bool() $focus = True) {
 	$*UI-APP.obj.focus: $.obj if $focus;
 	self
 }
 
 multi method focus(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "focus", { self.focus: block self }
-	self
+	$.auto-subscribe: "focus", with-ui-context $*UI-APP, $*UI-PARENT, { self.focus: block self }
 }
 
 method mark-dirty {
@@ -116,7 +111,7 @@ dynamic variables are available:
 
 =item C<$*UI-PARENT> — The parent builder (if any)
 
-=item C<%*UI-PATHS> — C<SetHash> tracking state paths read during block evaluation
+=item C<@*UI-PATHS> — C<Array> tracking state paths read during block evaluation
 
 =item C<@*UI-NODES> — Stack of child widgets being constructed
 
@@ -131,7 +126,7 @@ registering the builder with its parent container.
 
 =head3 C<auto-subscribe(Str $method, &block)>
 
-Sets up store subscriptions for reactive value blocks. For each path in C<%*UI-PATHS>,
+Sets up store subscriptions for reactive value blocks. For each path in C<@*UI-PATHS>,
 registers a callback that re-invokes C<&block> when that state path changes. Uses
 C<with-ui-context> to preserve C<$*UI-APP> and C<$*UI-PARENT> across async boundaries.
 

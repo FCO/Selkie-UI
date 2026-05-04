@@ -27,10 +27,7 @@ multi method select-by-name(Str $name) {
 }
 
 multi method select-by-name(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "select-by-name", { self.select-by-name: block self }
-	self
+	$.auto-subscribe: "select-by-name", with-ui-context $*UI-APP, $*UI-PARENT, { self.select-by-name: block self }
 }
 
 multi method select-index(UInt $idx) {
@@ -39,10 +36,7 @@ multi method select-index(UInt $idx) {
 }
 
 multi method select-index(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "select-index", { self.select-index: block self }
-	self
+	$.auto-subscribe: "select-index", with-ui-context $*UI-APP, $*UI-PARENT, { self.select-index: block self }
 }
 
 method set-active-name-silent(Str $name) {
@@ -51,9 +45,7 @@ method set-active-name-silent(Str $name) {
 }
 
 method on-tab-selected(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-tab-selected.tap: -> $name { with-ui-context($app, $parent, &block)(self, $name) };
+	$!obj.on-tab-selected.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $name { block self, $name }
 	self
 }
 

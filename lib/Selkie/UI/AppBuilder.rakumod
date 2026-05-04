@@ -2,9 +2,11 @@ use Selkie::UI::Base;
 use Selkie::UI::ScreenBuilder;
 use Selkie::App;
 use Selkie::Container;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::AppBuilder is Selkie::UI::Base;
 
+has $.start-screen;
 has Selkie::App $.obj   .= new;
 has             &.block;
 
@@ -12,8 +14,8 @@ submethod TWEAK(:&block) {
 	my $*UI-APP = self;
 	my @*UI-NODES;
 	block self;
-	my Str $default;
 	die "No screens to show" unless @*UI-NODES;
+	my Str $default;
 	for @*UI-NODES -> $node {
 		given $node {
 			when Selkie::UI::ScreenBuilder {
@@ -21,13 +23,17 @@ submethod TWEAK(:&block) {
 				self.add-screen: .name, .screen.obj;
 			}
 			default {
-				die "More than one unnamed screen..." with $default;
+				die "More than one unnamed screen..." if $++;
 				$default = "main";
 				self.add-screen: $default, .obj;
 			}
 		}
 	}
-	$!obj.switch-screen: $default;
+	with $!start-screen {
+		$!obj.switch-screen: .Str;
+	} else {
+		$!obj.switch-screen: $default;
+	}
 	self
 }
 
@@ -44,11 +50,7 @@ multi method theme(Selkie::Theme $theme) { $!obj.set-theme: $theme; self }
 multi method theme(*%theme) { $!obj.theme: Selkie::Theme.new: |%theme; self }
 
 multi method theme(&theme) {
-	my %*UI-PATHS := SetHash.new;
-	$ = theme self;
-	$.auto-subscribe: "theme", { self.theme: theme self }
-	self
+	$.auto-subscribe: "theme", with-ui-context $*UI-APP, $*UI-PARENT, { self.theme: theme self }
 }
-
 
 method run { $!obj.run }

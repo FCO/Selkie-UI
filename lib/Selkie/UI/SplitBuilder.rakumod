@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Layout::Split;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::SplitBuilder is Selkie::UI::Base;
 
@@ -22,19 +23,10 @@ multi method set($first?, $second?) {
 }
 
 multi method set(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	$ = block self;
-	self.set: |$_ with @*UI-NODES;
-	self.auto-subscribe: "add", {
-		my $*UI-APP = $app;
-		my @*UI-NODES;
+	self.auto-subscribe: "add", with-ui-context $*UI-APP, $*UI-PARENT, {
 		$ = block self;
 		self.set: |@*UI-NODES
 	}
-	self
 }
 
 multi method add($node) {
@@ -43,17 +35,7 @@ multi method add($node) {
 }
 
 multi method add(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	$ = block self;
-	for @*UI-NODES -> $node {
-		self.add: $node
-	}
-	self.auto-subscribe: "add", {
-		my $*UI-APP = $app;
-		my @*UI-NODES;
+	self.auto-subscribe: "add", with-ui-context $*UI-APP, $*UI-PARENT, {
 		$ = block self;
 		for @*UI-NODES -> $node {
 			self.add: $node
@@ -68,10 +50,7 @@ multi method orientation(Str $orientation!) {
 }
 
 multi method orientation(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "orientation", { self.orientation: block self }
-	self
+	$.auto-subscribe: "orientation", with-ui-context $*UI-APP, $*UI-PARENT, { self.orientation: block self }
 }
 
 multi method ratio(Numeric $ratio!) {
@@ -80,10 +59,7 @@ multi method ratio(Numeric $ratio!) {
 }
 
 multi method ratio(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "ratio", { self.ratio: block self }
-	self
+	$.auto-subscribe: "ratio", with-ui-context $*UI-APP, $*UI-PARENT, { self.ratio: block self }
 }
 
 multi method first($widget) {
@@ -92,19 +68,10 @@ multi method first($widget) {
 }
 
 multi method first(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	$ = block self;
-	self.first: @*UI-NODES.head;
-	self.auto-subscribe: "first", {
-		my $*UI-APP = $app;
-		my @*UI-NODES;
+	self.auto-subscribe: "first", with-ui-context $*UI-APP, $*UI-PARENT, {
 		$ = block self;
 		self.first: @*UI-NODES.head
 	}
-	self
 }
 
 multi method second($widget) {
@@ -113,17 +80,8 @@ multi method second($widget) {
 }
 
 multi method second(&block) {
-	my $app = $*UI-APP;
-	my %*UI-PATHS := SetHash.new;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	$ = block self;
-	self.second: @*UI-NODES.head;
-	self.auto-subscribe: "second", {
-		my $*UI-APP = $app;
-		my @*UI-NODES;
+	self.auto-subscribe: "second", with-ui-context $*UI-APP, $*UI-PARENT, {
 		$ = block self;
 		self.second: @*UI-NODES.head
 	}
-	self
 }

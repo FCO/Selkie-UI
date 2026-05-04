@@ -46,13 +46,38 @@ The DSL handles the glue between your declarative definitions and Selkie's imper
 State Management
 ================
 
-`new-state` creates reactive state variables that automatically dispatch updates and re-render affected UI elements.
+new-state
+---------
 
-For compound values (arrays, hashes), assign a new value to trigger updates. In-place mutations do not dispatch.
+`new-state($default, :$name, :$event)` creates a reactive scalar state variable that automatically dispatches updates and re-renders affected UI elements. Returns a Proxy where reads track the state path in `@*UI-PATHS` and writes dispatch events through the store.
 
 ```raku
-my $items := new-state [];
-$items = [ |$items, 'new' ];
+my $counter := new-state 0;
+$counter = 42;
+```
+
+new-array-state
+---------------
+
+`new-array-state(@default, :$name, :$event)` returns a [ReactiveArray](ReactiveArray) object that implements `Positional` and `Iterable`. Bind with `:=` to an `@`-sigiled variable. Mutation methods (`ASSIGN-POS`, `push`, `pop`, `shift`, `unshift`, `splice`) dispatch fresh values to the store.
+
+For nested mutations, use the extract-modify-reassign pattern:
+
+```raku
+my @tasks := new-array-state [{:title<A>,:!done},{:title<B>,:!done}];
+my %task = @tasks[0];
+%task<done> = True;
+@tasks[0] = %task;   # ASSIGN-POS dispatches fresh Array
+```
+
+new-hash-state
+--------------
+
+`new-hash-state(%default, :$name, :$event)` returns a [ReactiveHash](ReactiveHash) object that implements `Associative` and `Iterable`. Bind with `:=` to a `%`-sigiled variable. Mutation methods (`ASSIGN-KEY`, `DELETE-KEY`) dispatch fresh values to the store.
+
+```raku
+my %config := new-hash-state {:theme<dark>, :refresh(30)};
+%config<theme> = 'light';   # ASSIGN-KEY dispatches fresh Hash
 ```
 
 Block-Based Setters
@@ -125,6 +150,10 @@ Helpers
 
 App helpers that interact with the runtime:
 
+  * `Handler` — Register a store event handler
+
+  * `Detached` — Create isolated UI nodes without parent attachment
+
   * `OnKey` — Register global key handlers
 
   * `OnFrame` — Register a per-frame callback
@@ -132,6 +161,18 @@ App helpers that interact with the runtime:
   * `Dispatch` — Dispatch events to the store
 
   * `Tick` — Tick the store immediately
+
+  * `ShowModal` — Open a modal dialog
+
+  * `CloseModal` — Close the currently open modal
+
+  * `Focus` — Focus a specific widget
+
+  * `FocusNext` — Move focus to the next widget
+
+  * `FocusPrevious` — Move focus to the previous widget
+
+  * `SwitchScreen` — Switch to a named screen
 
   * `Quit` — Quit the application
 
@@ -201,7 +242,7 @@ The `App` block is the entry point that initializes the application. The `new-st
 ListView with reactive items
 ----------------------------
 
-This example binds a list view to a reactive array. When the array changes, the list updates automatically.
+This example binds a list view to a reactive array. When the array changes, the list updates automatically. For reactive array data, consider using [new-array-state](new-array-state) instead of `new-state` — it provides direct mutation methods (`push`, `shift`, `splice`) that dispatch updates automatically.
 
 ```raku
 use Selkie::UI;
@@ -447,10 +488,25 @@ new-state($default, :$name, :$event)
 
 Creates a reactive state variable. Returns a Proxy that auto-tracks reads and dispatches events on writes. Requires an active `App` context.
 
+new-array-state(@default, :$name, :$event)
+------------------------------------------
+
+Creates a reactive array state. Returns a `ReactiveArray` that implements `Positional` and `Iterable`. Bind with `:=` to an `@`-sigiled variable.
+
+new-hash-state(%default, :$name, :$event)
+-----------------------------------------
+
+Creates a reactive hash state. Returns a `ReactiveHash` that implements `Associative` and `Iterable`. Bind with `:=` to a `%`-sigiled variable.
+
 Handler(Str $name, &block)
 --------------------------
 
 Registers a store event handler for the given event name.
+
+Detached(&block)
+----------------
+
+Creates isolated UI node contexts without parent attachment.
 
 OnKey(Str:D $spec, &handler, Str :$screen)
 ------------------------------------------
@@ -472,15 +528,40 @@ Tick
 
 Triggers an immediate store tick (re-render cycle).
 
-Quit
-----
+ShowModal($modal)
+-----------------
 
-Exits the TUI application gracefully.
+Opens a modal dialog from a builder or widget.
 
 CloseModal
 ----------
 
 Closes the currently open modal dialog.
+
+Focus($widget)
+--------------
+
+Focuses a specific widget.
+
+FocusNext
+---------
+
+Moves focus to the next focusable widget.
+
+FocusPrevious
+-------------
+
+Moves focus to the previous focusable widget.
+
+SwitchScreen(Str $name)
+-----------------------
+
+Switches to a named screen.
+
+Quit
+----
+
+Exits the TUI application gracefully.
 
 AUTHOR
 ======

@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Histogram;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::HistogramBuilder is Selkie::UI::Base;
 
@@ -33,8 +34,5 @@ multi method values(@values) {
 }
 
 multi method values(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "values", { self.values: block self }
-	self
+	$.auto-subscribe: "values", with-ui-context $*UI-APP, $*UI-PARENT, { self.values: block self }
 }

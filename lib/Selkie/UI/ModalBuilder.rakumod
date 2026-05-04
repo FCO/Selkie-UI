@@ -8,23 +8,9 @@ has Rat  $.width-ratio;
 has Rat  $.height-ratio;
 has Bool $.dim-background;
 has Selkie::Widget::Modal $.obj .= new:
-	|(:$!width-ratio with $!width-ratio),
-	|(:$!height-ratio with $!height-ratio),
-	|(:$!dim-background with $!dim-background);
-
-method content($widget, Bool :$destroy = True) {
-	$!obj.set-content($widget.obj, :$destroy);
-	self
-}
-
-method on-close(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-close.tap: -> $ { with-ui-context($app, $parent, &block)(self) };
-	self
-}
-
-method close { $!obj.close }
+|(:$!width-ratio with $!width-ratio),
+|(:$!height-ratio with $!height-ratio),
+|(:$!dim-background with $!dim-background);
 
 submethod TWEAK(:&block) {
 	return unless &block.defined;
@@ -32,7 +18,21 @@ submethod TWEAK(:&block) {
 	my @*UI-NODES;
 	block self;
 	with @*UI-NODES.head -> $node {
-		$!obj.set-content($node.obj);
+		self.content: $node
 	}
 	self
 }
+
+method content($widget, Bool :$destroy = True) {
+	$!obj.set-content: $widget.&selkie-obj, :$destroy;
+	self
+}
+
+method on-close(&block) {
+	my $app = $*UI-APP;
+	my $parent = $*UI-PARENT;
+	$!obj.on-close.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $received { block self, $received }
+	self
+}
+
+method close { $!obj.close }

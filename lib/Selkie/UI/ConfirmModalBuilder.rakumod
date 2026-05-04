@@ -4,10 +4,39 @@ use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ConfirmModalBuilder is Selkie::UI::Base;
 
+has Str   $.title;
+has Str   $.message;
+has Str   $.yes-label = "yes";
+has Str   $.no-label  = "no";
+has Rat() $.width-ratio;
+has Rat() $.height-ratio;
 has Selkie::Widget::ConfirmModal $.obj .= new;
 
-method build(:$title, :$message, :$yes-label, :$no-label,
-		:$width-ratio, :$height-ratio) {
+submethod TWEAK(
+	:$title,
+	:$message,
+	:$yes-label,
+	:$no-label,
+	:$width-ratio,
+	:$height-ratio
+) {
+	self.build:
+	:$title,
+	:$message,
+	:$yes-label,
+	:$no-label,
+	:$width-ratio,
+	:$height-ratio
+}
+
+method build(
+	:$title,
+	:$message,
+	:$yes-label,
+	:$no-label,
+	:$width-ratio,
+	:$height-ratio
+) {
 	$!obj.build(
 		|(:$title with $title),
 		|(:$message with $message),
@@ -16,12 +45,11 @@ method build(:$title, :$message, :$yes-label, :$no-label,
 		|(:$width-ratio with $width-ratio),
 		|(:$height-ratio with $height-ratio),
 	);
+	self
 }
 
 method on-result(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-result.tap: -> $result { with-ui-context($app, $parent, &block)(self, $result) };
+	$!obj.on-result.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $result { block self, $result }
 	self
 }
 

@@ -4,14 +4,29 @@ has $.store is required;
 has Str $.name is required;
 has Str $.event is required;
 
-method AT-POS(Int $pos) {
-	.{$!name} = True with %*UI-PATHS;
-	my @current = $!store.get-in: $!name;
-	@current[$pos]
+method !get {
+	.push: ($!name,) with @*UI-PATHS;
+	self!get-only
 }
 
-method ASSIGN-POS(Int $pos, $value) {
-	my @current = $!store.get-in: $!name;
+method !get-only { $!store.get-in: $!name }
+
+method list { self!get }
+
+method List              { $.list }
+method Array(-->Array()) { $.list }
+
+method STORE(Array() $value) {
+	$!store.dispatch: $!event, :$value;
+	$value<>
+}
+
+method AT-POS(UInt $pos) {
+	self!get.AT-POS: $pos
+}
+
+method ASSIGN-POS(UInt $pos, $value) {
+	my @current    = self!get-only;
 	@current[$pos] = $value;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
@@ -19,32 +34,31 @@ method ASSIGN-POS(Int $pos, $value) {
 }
 
 method EXISTS-POS(Int $pos) {
-	my @current = $!store.get-in: $!name;
-	@current.EXISTS-POS($pos)
+	self!get.EXISTS-POS($pos)
 }
 
 method DELETE-POS(Int $pos) {
-	my @current := $!store.get-in: $!name;
-	@current.DELETE-POS($pos);
+	my @current = self!get-only;
+	my $val = @current.DELETE-POS: $pos;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
+	$val
 }
 
-method elems {
-	.{$!name} = True with %*UI-PATHS;
-	my @current = $!store.get-in: $!name;
-	@current.elems
-}
+method elems { self!get.elems }
+method Numeric { $.elems }
+method Int { $.Numeric }
 
-method push(|values) {
-	my @current = $!store.get-in: $!name;
-	@current.push: |values;
+method push(\values) {
+	my @current = self!get-only;
+	@current.push: values;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
+	@current
 }
 
 method pop {
-	my @current = $!store.get-in: $!name;
+	my @current = self!get-only;
 	my $v = @current.pop;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
@@ -52,41 +66,25 @@ method pop {
 }
 
 method shift {
-	my @current = $!store.get-in: $!name;
+	my @current = self!get-only;
 	my $v = @current.shift;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
 	$v
 }
 
-method unshift(|values) {
-	my @current = $!store.get-in: $!name;
-	@current.unshift(|values);
+method unshift(*@values) {
+	my @current = self!get-only;
+	@current.unshift: |@values;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
+	@current
 }
 
 method splice(|c) {
-	my @current = $!store.get-in: $!name;
-	my @r = @current.splice(|c);
+	my @current = self!get-only;
+	my @r = @current.splice: |c;
 	$!store.dispatch: $!event, value => @current;
 	$!store.tick;
 	@r
-}
-
-method list {
-	.{$!name} = True with %*UI-PATHS;
-	my @current = $!store.get-in: $!name;
-	@current.list
-}
-
-method set(@values) {
-	$!store.dispatch: $!event, value => @values;
-	self
-}
-
-method STORE($values) {
-	my @next = $values ~~ Positional ?? $values.list !! ($values.defined ?? [$values] !! []);
-	$!store.dispatch: $!event, value => @next;
-	@next
 }

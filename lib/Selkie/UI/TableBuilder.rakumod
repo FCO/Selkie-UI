@@ -21,10 +21,7 @@ multi method rows(@rows) {
 }
 
 multi method rows(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "rows", { self.rows: block self }
-	self
+	$.auto-subscribe: "rows", with-ui-context $*UI-APP, $*UI-PARENT, { self.rows: block self }
 }
 
 method clear-columns {
@@ -48,16 +45,14 @@ method select-index(UInt $idx) {
 }
 
 method on-select(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-select.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
+	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx }
 	self
 }
 
 method on-activate(&block) {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-activate.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
+	$!obj.on-activate.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx }
 	self
 }
 

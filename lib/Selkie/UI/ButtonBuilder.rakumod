@@ -13,15 +13,10 @@ multi method label(Str $label) {
 }
 
 multi method label(&label) {
-	my %*UI-PATHS := SetHash.new;
-	$ = label self;
-	$.auto-subscribe: "label", { self.label: label self }
-	self
+	$.auto-subscribe: "label", with-ui-context $*UI-APP, $*UI-PARENT, { self.label: label self }
 }
 
 method on-press(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-press.tap: { with-ui-context($app, $parent, &block)(self) }
+	$!obj.on-press.tap: with-ui-context $*UI-APP, $*UI-PARENT, { block self }
 	self
 }

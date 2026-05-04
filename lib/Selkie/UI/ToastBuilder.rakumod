@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Toast;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ToastBuilder is Selkie::UI::Base;
 
@@ -11,10 +12,7 @@ multi method show(Str $message, :$duration, :$style) {
 }
 
 multi method show(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "show", { self.show: block self }
-	self
+	$.auto-subscribe: "show", with-ui-context $*UI-APP, $*UI-PARENT, { self.show: block self }
 }
 
 method tick(--> Bool) { $!obj.tick }

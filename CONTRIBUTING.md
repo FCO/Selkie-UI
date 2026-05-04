@@ -67,7 +67,7 @@ Builder methods use `multi` dispatch to support both direct values and reactive 
 ```raku
 multi method label(Str $label) { $.obj.label = $label; self }
 multi method label(&label) {
-    %*UI-PATHS := SetHash.new;
+    my @*UI-PATHS;
     with &label.() -> $value {
         $.obj.label = $value;
         $.auto-subscribe("label", &label);
@@ -81,7 +81,7 @@ multi method label(&label) {
 Context is passed through dynamic variables that only exist within builder scopes:
 - `$*UI-APP` — The running application
 - `$*UI-PARENT` — The parent builder
-- `%*UI-PATHS` — Tracks state paths read during block evaluation
+- `@*UI-PATHS` — Tracks state paths read during block evaluation
 - `@*UI-NODES` — Nodes created by child builders
 
 ### Naming

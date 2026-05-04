@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::ScrollView;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ScrollViewBuilder is Selkie::UI::Base;
 
@@ -33,9 +34,7 @@ multi method scroll-to-start(Bool $scroll = True) {
 }
 
 multi method scroll-to-start(&block) {
-	$.scroll-to-start: block self;
-	$.auto-subscribe: "scroll-to-start", { self.scroll-to-start: block self }
-	self
+	$.auto-subscribe: "scroll-to-start", with-ui-context $*UI-APP, $*UI-PARENT, { self.scroll-to-start: block self }
 }
 
 multi method scroll-to-end(Bool $scroll = True) {
@@ -44,9 +43,7 @@ multi method scroll-to-end(Bool $scroll = True) {
 }
 
 multi method scroll-to-end(&block) {
-	$.scroll-to-end: block self;
-	$.auto-subscribe: "scroll-to-end", { self.scroll-to-end: block self }
-	self
+	$.auto-subscribe: "scroll-to-end", with-ui-context $*UI-APP, $*UI-PARENT, { self.scroll-to-end: block self }
 }
 
 method clear { $!obj.clear }
@@ -64,15 +61,8 @@ multi method content(@widgets) {
 }
 
 multi method content(&block) {
-	my %*UI-PATHS;
-	my $*UI-PARENT = self;
-	my @*UI-NODES;
-	$ = block self;
-	$.content: @*UI-NODES;
-	$.auto-subscribe: "content", {
-		my @*UI-NODES;
+	$.auto-subscribe: "content", with-ui-context $*UI-APP, $*UI-PARENT, {
 		$ = block self;
 		self.content: @*UI-NODES
 	}
-	self
 }

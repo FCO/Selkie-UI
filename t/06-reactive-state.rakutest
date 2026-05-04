@@ -90,7 +90,7 @@ class MockApp {
 
         my $deleted = %h<b>:delete;
         is $deleted, 2, 'DELETE-KEY returns deleted value';
-        ok !%h.EXISTS-KEY('b'), 'DELETE-KEY removes key';
+        ok %h<b>:!exists, 'DELETE-KEY removes key';
     };
 }
 

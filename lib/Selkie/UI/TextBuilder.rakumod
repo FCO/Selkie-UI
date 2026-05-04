@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::Text;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::TextBuilder is Selkie::UI::Base;
 
@@ -11,19 +12,25 @@ method TWEAK(:&block) {
 	self.text: $_ with &block
 }
 
+multi method text(Empty) {
+	$.text: "";
+	self
+}
+
 multi method text(Str $text) {
 	$!obj.set-text: $text;
 	self
 }
 
 multi method text(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$!obj.set-text: block self;
-	$.auto-subscribe: "text", { self.text: block self }
+	$.auto-subscribe: "text", with-ui-context $*UI-APP, $*UI-PARENT, { self.text: block self }
+}
+
+multi method text-silent(Str $text) {
+	$!obj.set-text-silent: $text;
 	self
 }
 
-method text-silent(Str $text) {
-	$!obj.set-text-silent($text);
-	self
+multi method text-silent(&block) {
+	$.auto-subscribe: "text-silent", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: block self }
 }

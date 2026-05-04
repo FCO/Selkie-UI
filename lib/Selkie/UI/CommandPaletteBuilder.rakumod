@@ -22,12 +22,14 @@ multi method add-command(&action, Str :$label!) {
 }
 
 multi method add-command(&action, &label-block) {
-	my %*UI-PATHS := SetHash.new;
+	my @*UI-PATHS;
 	$ = label-block self;
 	@!commands.push: %(label-block => &label-block, action => &action);
 	self!rebuild-commands;
 	my $idx = @!commands.end;
-	$.auto-subscribe: "add-command-{$idx}", { self!rebuild-commands }
+	$.auto-subscribe: "add-command-{$idx}", with-ui-context $*UI-APP, $*UI-PARENT, {
+		self!rebuild-commands
+	}
 	self
 }
 
@@ -46,9 +48,7 @@ multi method commands(@commands) {
 }
 
 multi method commands(&block) {
-	my %*UI-PATHS := SetHash.new;
-	self.commands(block self);
-	$.auto-subscribe: "commands", { self.commands(block self) }
+	$.auto-subscribe: "commands", with-ui-context $*UI-APP, $*UI-PARENT, { self.commands: block self }
 	self
 }
 
@@ -91,8 +91,8 @@ method show-modal {
 method on-command(&block) {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-command.tap: -> $cmd {
-		with-ui-context($app, $parent, &block)(self, $cmd)
+	$!obj.on-command.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $cmd {
+		block self, $cmd
 	}
 	self
 }

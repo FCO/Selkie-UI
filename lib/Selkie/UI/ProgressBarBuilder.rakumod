@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::ProgressBar;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::ProgressBarBuilder is Selkie::UI::Base;
 
@@ -11,10 +12,7 @@ multi method progress(Numeric $value) {
 }
 
 multi method progress(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "progress", { self.progress: block self }
-	self
+	$.auto-subscribe: "progress", with-ui-context $*UI-APP, $*UI-PARENT, { self.progress: block self }
 }
 
 multi method indeterminate(Bool $indet = True) {
@@ -23,10 +21,7 @@ multi method indeterminate(Bool $indet = True) {
 }
 
 multi method indeterminate(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "indeterminate", { self.indeterminate: block self }
-	self
+	$.auto-subscribe: "indeterminate", with-ui-context $*UI-APP, $*UI-PARENT, { self.indeterminate: block self }
 }
 
 multi method show-percentage(Bool $show = True) {
@@ -35,10 +30,7 @@ multi method show-percentage(Bool $show = True) {
 }
 
 multi method show-percentage(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "show-percentage", { self.show-percentage: block self }
-	self
+	$.auto-subscribe: "show-percentage", with-ui-context $*UI-APP, $*UI-PARENT, { self.show-percentage: block self }
 }
 
 method tick {

@@ -12,10 +12,7 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
-	my %*UI-PATHS := SetHash.new;
-	self.set-items(block self);
-	$.auto-subscribe: "set-items", { self.set-items(block self) }
-	self
+	$.auto-subscribe: "set-items", with-ui-context $*UI-APP, $*UI-PARENT, { self.set-items(block self) }
 }
 
 method placeholder(Str $placeholder) {
@@ -23,14 +20,16 @@ method placeholder(Str $placeholder) {
 	self
 }
 
-method select-index(UInt $idx) {
-	$!obj.select-index($idx);
+multi method select-index(UInt $idx) {
+	$!obj.select-index: $_ with $idx;
 	self
 }
 
+multi method select-index(&block) {
+	$.auto-subscribe: "select-index", with-ui-context $*UI-APP, $*UI-PARENT, { self.select-index: block self }
+}
+
 multi method on-change(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-change.tap: -> $idx { with-ui-context($app, $parent, &block)(self, $idx) };
+	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx }
 	self
 }

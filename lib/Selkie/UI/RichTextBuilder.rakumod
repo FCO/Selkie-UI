@@ -1,6 +1,7 @@
 use Selkie::UI::Base;
 use Selkie::Widget::RichText;
 use Selkie::Style;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::RichTextBuilder is Selkie::UI::Base;
 
@@ -28,10 +29,7 @@ has Selkie::Widget::RichText $.obj .= new:
 }
 
 multi method content(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "content", { self.content: block self }
-	self
+	$.auto-subscribe: "content", with-ui-context $*UI-APP, $*UI-PARENT, { self.content: block self }
 }
 
 method truncated-top(Bool $value = True) {

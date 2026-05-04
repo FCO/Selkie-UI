@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::LineChart;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::LineChartBuilder is Selkie::UI::Base;
 
@@ -33,8 +34,5 @@ multi method series(@series) {
 }
 
 multi method series(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "series", { self.series: block self }
-	self
+	$.auto-subscribe: "series", with-ui-context $*UI-APP, $*UI-PARENT, { self.series: block self }
 }

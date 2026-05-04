@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Widget::BarChart;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::BarChartBuilder is Selkie::UI::Base;
 
@@ -31,8 +32,5 @@ multi method data(@data) {
 }
 
 multi method data(&block) {
-	my %*UI-PATHS := SetHash.new;
-	$ = block self;
-	$.auto-subscribe: "data", { self.data: block self }
-	self
+	$.auto-subscribe: "data", with-ui-context $*UI-APP, $*UI-PARENT, { self.data: block self }
 }
