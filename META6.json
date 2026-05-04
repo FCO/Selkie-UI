@@ -4,6 +4,10 @@
     "Fernando Correa de Oliveira"
   ],
   "build-depends": [
+    "Selkie",
+    "UUID",
+    "Terminal::ANSIParser",
+    "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
   ],
   "depends": [
     "Selkie",
@@ -70,6 +74,9 @@
   "tags": [
   ],
   "test-depends": [
+    "Selkie",
+    "UUID",
+    "Terminal::ANSIParser",
     "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
   ],
   "version": "0.0.1"

@@ -21,10 +21,12 @@ subtest 'Select select-index setter' => {
     is $select.obj.selected, 2, 'select-index updated';
 }
 
-# subtest 'ListView on-key returns self' => {
-#     my $list = ListView;
-#     my $result = $list.on-key('d', -> $ { });
-#     is $result, $list, 'on-key returns self';
-# }
+subtest 'ListView on-key returns self' => {
+    my $*UI-APP = Any;
+    my $*UI-PARENT = Any;
+    my $list = Selkie::UI::ListViewBuilder.new;
+    my $result = $list.on-key('d', -> $ { });
+    is $result, $list, 'on-key returns self';
+}
 
 done-testing;

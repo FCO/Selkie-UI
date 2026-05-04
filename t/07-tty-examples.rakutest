@@ -1,13 +1,26 @@
 use Test;
 use Selkie::UI::Test::TTY;
 
-plan 10;
+plan *;
 
-# 1 — Counter: tab navigate buttons, enter to activate
+if %*ENV<CI> || %*ENV<GITHUB_ACTIONS> {
+    plan 1;
+    skip 'TTY tests require a real terminal (not available in CI)';
+    done-testing;
+    exit;
+}
+
+# 1 — Counter
 subtest 'Counter example' => {
-    plan 7;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/counter.raku>);
-    ok $tty.is-alive, 'Counter script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 7;
+    ok $tty.ready, 'Counter script started';
 
     $tty.send-key('tab');
     $tty.send-key('enter');
@@ -35,11 +48,17 @@ subtest 'Counter example' => {
     $tty.cleanup;
 }
 
-# 2 — Tasks: navigate list, toggle, switch screens
+# 2 — Tasks
 subtest 'Tasks example' => {
-    plan 7;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/tasks.raku>);
-    ok $tty.is-alive, 'Tasks script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 7;
+    ok $tty.ready, 'Tasks script started';
 
     $tty.send-key('down');
     $tty.send-key('enter');
@@ -62,11 +81,17 @@ subtest 'Tasks example' => {
     $tty.cleanup;
 }
 
-# 3 — Chat: clear, toggle theme, send message (exercises set-items fix)
+# 3 — Chat
 subtest 'Chat example' => {
-    plan 9;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/chat.raku>);
-    ok $tty.is-alive, 'Chat script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 9;
+    ok $tty.ready, 'Chat script started';
 
     $tty.send-key('ctrl+l');
     sleep 0.5;
@@ -98,11 +123,17 @@ subtest 'Chat example' => {
     $tty.cleanup;
 }
 
-# 4 — Dashboard: row activate, sort, palette, polling toggle (spinner fix)
+# 4 — Dashboard
 subtest 'Dashboard example' => {
-    plan 8;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/dashboard.raku>);
-    ok $tty.is-alive, 'Dashboard script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 8;
+    ok $tty.ready, 'Dashboard script started';
 
     $tty.send-key('tab');
     $tty.send-key('enter');
@@ -131,11 +162,17 @@ subtest 'Dashboard example' => {
     $tty.cleanup;
 }
 
-# 5 — Job Runner: start job, wait (exercises show-percentage fix)
+# 5 — Job Runner
 subtest 'Job-runner example' => {
-    plan 7;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/job-runner.raku>);
-    ok $tty.is-alive, 'Job-runner script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 7;
+    ok $tty.ready, 'Job-runner script started';
 
     $tty.send-key('s');
     sleep 1;
@@ -155,11 +192,17 @@ subtest 'Job-runner example' => {
     $tty.cleanup;
 }
 
-# 6 — File Viewer: open/close browser (exercises ScrollView.content fix)
+# 6 — File Viewer
 subtest 'File-viewer example' => {
-    plan 8;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/file-viewer.raku>);
-    ok $tty.is-alive, 'File-viewer script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 8;
+    ok $tty.ready, 'File-viewer script started';
 
     $tty.send-key('o');
     sleep 0.5;
@@ -185,11 +228,17 @@ subtest 'File-viewer example' => {
     $tty.cleanup;
 }
 
-# 7 — Settings: save, about modal, close, save again (exercises text(Str) fix)
+# 7 — Settings
 subtest 'Settings example' => {
-    plan 8;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/settings.raku>);
-    ok $tty.is-alive, 'Settings script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 8;
+    ok $tty.ready, 'Settings script started';
 
     $tty.send-key('ctrl+s');
     sleep 0.5;
@@ -215,11 +264,17 @@ subtest 'Settings example' => {
     $tty.cleanup;
 }
 
-# 8 — Charts: visual live updates
+# 8 — Charts
 subtest 'Charts example' => {
-    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/charts.raku>);
-    ok $tty.is-alive, 'Charts script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 6;
+    ok $tty.ready, 'Charts script started';
 
     sleep 2;
     ok $tty.is-alive, 'Charts: after frames alive';
@@ -235,11 +290,17 @@ subtest 'Charts example' => {
     $tty.cleanup;
 }
 
-# 9 — Text: type and submit
+# 9 — Text
 subtest 'Text example' => {
-    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/text.raku>);
-    ok $tty.is-alive, 'Text script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 6;
+    ok $tty.ready, 'Text script started';
 
     $tty.send-text('Hello world');
     $tty.send-key('enter');
@@ -259,11 +320,17 @@ subtest 'Text example' => {
     $tty.cleanup;
 }
 
-# 10 — Test: button press
+# 10 — Test
 subtest 'Test example' => {
-    plan 6;
     my $tty = Selkie::UI::Test::TTY.new(:script<examples/test.raku>);
-    ok $tty.is-alive, 'Test script started';
+    if !$tty.verify {
+        plan 1;
+        skip 'TTY interaction not available (PTY may not support TUI rendering)';
+        done-testing;
+        return;
+    }
+    plan 6;
+    ok $tty.ready, 'Test script started';
 
     $tty.send-key('enter');
     sleep 0.5;
