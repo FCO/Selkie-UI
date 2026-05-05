@@ -13,7 +13,7 @@ multi method label(Str $label) {
 }
 
 multi method label(&label-block) {
-	$.auto-subscribe: "label", with-ui-context $*UI-APP, $*UI-PARENT, { self.label: label-block self }
+	$.auto-subscribe: "label", with-ui-context { self.label: label-block self }
 }
 
 multi method check(Bool() $checked = True) {
@@ -22,11 +22,11 @@ multi method check(Bool() $checked = True) {
 }
 
 multi method check(&block) {
-	$.auto-subscribe: "check", with-ui-context $*UI-APP, $*UI-PARENT, { self.check: block self }
+	$.auto-subscribe: "check", with-ui-context { self.check: block self }
 }
 
-multi method on-change(&block) {
-	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $checked { block self, $checked }
+multi method on-change(&block) is idempotent {
+	$!obj.on-change.tap: with-ui-context -> $checked { block self, $checked }
 	self
 }
 

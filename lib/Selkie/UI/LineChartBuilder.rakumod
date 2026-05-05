@@ -34,5 +34,5 @@ multi method series(@series) {
 }
 
 multi method series(&block) {
-	$.auto-subscribe: "series", with-ui-context $*UI-APP, $*UI-PARENT, { self.series: block self }
+	$.auto-subscribe: "series", with-ui-context { self.series: block self }
 }

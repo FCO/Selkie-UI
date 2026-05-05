@@ -1,5 +1,6 @@
 use Selkie::UI::Base;
 use Selkie::Layout::VBox;
+use Selkie::UI::Helpers;
 
 unit class Selkie::UI::VBoxBuilder is Selkie::UI::Base;
 
@@ -11,7 +12,7 @@ submethod TWEAK(:&block) {
 	my @*UI-NODES;
 	block self;
 	for @*UI-NODES -> $node {
-		$!obj.add: $node.obj
+		$!obj.add: $node.&selkie-obj
 	}
 	self
 }

@@ -18,7 +18,6 @@ App :start-screen<list>, {
 	my $active-screen := new-state 'list';
 
 	sub current-task-id($cursor) {
-		dd $cursor;
 		@visible-ids[$cursor] // Int
 	}
 
@@ -57,12 +56,12 @@ App :start-screen<list>, {
 						with current-task-id($list.cursor) -> $id {
 							my $idx = @tasks.first(*<id> == $id, :k);
 							with $idx.defined ?? @tasks[$idx] !! Nil -> $task {
-								ConfirmModal
+								ShowModal ConfirmModal
 								title => 'Delete task',
 								message => "Delete '{$task<text>}'?",
 								yes-label => 'Delete',
 								no-label => 'Cancel',
-								on-result => -> $confirmed {
+								on-result => -> $, $confirmed {
 									CloseModal;
 									if $confirmed {
 										@tasks = @tasks.grep(*<id> != $id).Array;
@@ -79,7 +78,7 @@ App :start-screen<list>, {
 				TextInput(
 					:1size,
 					:placeholder('Add a task — press Enter to submit'),
-				).on-submit: -> $input, $text {
+				).focus.on-submit: -> $input, $text {
 					my $trim = $text.trim;
 					if $trim.chars {
 						@tasks.push: { id => $next-id++, text => $trim, done => False };

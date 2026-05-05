@@ -11,23 +11,26 @@ App {
 	my $counter := new-state 0;
 
 	VBox {
-		Text(:text('  Selkie Counter  —  Tab switches focus, Ctrl+Q quits'),
+		Text(
+			:text('  Selkie Counter  —  Tab switches focus, Ctrl+Q quits'),
 			:1size,
-			:style(:fg(0x7AA2F7), :bold));
+			:style{ :fg(0x7AA2F7), :bold });
 
-		Text.text('') :size(:flex);
+		Text :text(''), :size(:flex);
 
-		Text.text: { "       Count: $counter" }
-			.size(3)
-			.style(:fg(0xFFFFFF), :bold);
+		Text(
+			:3size
+			:style{ :fg(0xFFFFFF), :bold},
+			{ "       Count: $counter" }
+		);
 
 		HBox :1size, {
 			Button.label('  −  ').on-press: { --$counter };
 			Button.label('Reset').on-press: { $counter = 0 };
-			Button.label('  +  ').on-press: { ++$counter };
+			Button.label('  +  ').focus.on-press: { ++$counter };
 		};
 
-		Text.text('') :size(:flex);
+		Text :text(''), :size(:flex);
 	};
 
 	OnKey('ctrl+q', { Quit });

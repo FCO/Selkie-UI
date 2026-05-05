@@ -126,18 +126,22 @@ multi Screen($node, Str :$name = "main", |c) is export {
 	ScreenBuilder.new: :$name, :screen($node), |c
 }
 
+multi Tab(&block, Str :$name!, Str :$label!, |c) is export {
+	ScreenBuilder.new: :$name, :$label, :&block, |c
+}
+
+multi Tab($node, Str :$name!, Str :$label!, |c) is export {
+	ScreenBuilder.new: :$name, :$label, :screen($node), |c
+}
+
 sub App(&block, |c) is export { AppBuilder.new(:&block, |c).run }
 
 sub OnFrame(&block) is export {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$app.obj.on-frame(with-ui-context($app, $parent, &block))
+	$*UI-APP.obj.on-frame(with-ui-context &block)
 }
 
 sub OnKey(Str:D $spec, &handler, Str :$screen) is export {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$app.obj.on-key($spec, with-ui-context($app, $parent, &handler), |(:$screen with $screen))
+	$*UI-APP.obj.on-key($spec, with-ui-context(&handler), |(:$screen with $screen))
 }
 
 sub Dispatch($event, *%payload) is export {
@@ -157,11 +161,15 @@ sub CloseModal is export {
 }
 
 sub ShowModal($modal) is export {
-	$*UI-APP.obj.show-modal: .?modal // $_ with $modal.&selkie-obj
+	my $m = .?modal // $_ with $modal.&selkie-obj;
+	$*UI-APP.obj.show-modal: $_ with $m;
+	$m
 }
 
 sub Focus($widget) is export {
-	$*UI-APP.obj.focus: selkie-obj $widget
+	my $obj = selkie-obj $widget;
+	$*UI-APP.obj.focus: $obj.?focusable-widget // $obj;
+	$widget
 }
 
 sub FocusNext is export {
@@ -196,14 +204,25 @@ sub TextStream(:$placeholder, |c) is export { ss |c, TextStreamBuilder.new: |(:$
 sub TextInput(:$placeholder, |c)  is export { ss |c, TextInputBuilder.new:  |(:$placeholder with $placeholder),             |c }
 sub Checkbox(:$label, |c)         is export { ss |c, CheckboxBuilder.new:   |(:$label with $label),                         |c }
 sub Image(&block?, :$file, |c)    is export { ss |c, ImageBuilder.new:      |(:&block with &block), |(:$file with $file),   |c }
-sub Table(:$show-scrollbar, |c)   is export { ss |c, TableBuilder.new:      |(:$show-scrollbar with $show-scrollbar),       |c }
 sub RadioGroup(|c)                is export { ss |c, RadioGroupBuilder.new:                                                 |c }
 sub Select(|c)                    is export { ss |c, SelectBuilder.new:                                                     |c }
 sub ProgressBar(|c)               is export { ss |c, ProgressBarBuilder.new:                                                |c }
-sub ListView(&block, |c)          is export { ss |c, ListViewBuilder.new:   |(:&block with &block),                         |c }
+sub ListView(&block?, |c)         is export { ss |c, ListViewBuilder.new:   |(:&block with &block),                         |c }
 sub ConfirmModal(|c)              is export { ss |c, ConfirmModalBuilder.new:                                               |c }
-sub TabBar(|c)                    is export { ss |c, TabBarBuilder.new:                                                     |c }
-sub CommandPalette(|c)            is export { ss |c, CommandPaletteBuilder.new:                                             |c }
+sub TabBar(&block?, |c)           is export { ss |c, TabBarBuilder.new:     |(:&block with &block),                         |c }
+
+sub CommandPalette(&block?, |c) is export {
+	ss |c, CommandPaletteBuilder.new:
+	|(:&block with &block),
+	|c
+}
+
+sub Table(&block?, :$show-scrollbar, |c)   is export {
+	ss |c, TableBuilder.new:
+	|(:&block with &block),
+	|(:$show-scrollbar with $show-scrollbar),
+	|c
+}
 
 multi Border(&block?, :$title, :$hide-top-border, :$hide-bottom-border, |c) is export {
 	ss |c, BorderBuilder.new:
@@ -214,7 +233,11 @@ multi Border(&block?, :$title, :$hide-top-border, :$hide-bottom-border, |c) is e
 	|c
 }
 
-sub Modal(&block?, :$width-ratio, :$height-ratio, :$dim-background, |c) is export {
+multi Modal(Selkie::UI::Base $widget) is export {
+	$widget.modal
+}
+
+multi Modal(&block?, :$width-ratio, :$height-ratio, :$dim-background, |c) is export {
 	ss |c, ModalBuilder.new:
 	|(:&block with &block),
 	|(:$width-ratio with $width-ratio),
@@ -460,11 +483,25 @@ Creates a reactive state variable backed by the Selkie store. Returns a Proxy
 where C<FETCH> tracks access in C<@*UI-PATHS> (for auto-subscription) and
 C<STORE> dispatches update events. Requires an active C<$*UI-APP> context.
 
-For compound values (arrays, hashes), assign a B<new> value to trigger updates.
-In-place mutations do not dispatch.
+For scalar values (Str, Int, Bool). For compound types, use C<new-array-state>
+or C<new-hash-state>.
 
-my $counter := new-state 0;      # scalar
-my $items   := new-state [];     # compound — assign new array to update
+    my $counter := new-state 0;
+
+=head3 C<new-array-state(@default, :$name, :$event)>
+
+Creates a C<ReactiveArray> that implements C<Positional> and C<Iterable>. Bind
+with C<:=>. All mutations (C<push>, C<pop>, C<shift>, C<unshift>, C<splice>,
+C<ASSIGN-POS>) dispatch fresh values to the store.
+
+    my @tasks := new-array-state [{:title<A>, :!done}];
+
+=head3 C<new-hash-state(%default, :$name, :$event)>
+
+Creates a C<ReactiveHash> that implements C<Associative> and C<Iterable>. Bind
+with C<:=>. Mutations (C<ASSIGN-KEY>, C<DELETE-KEY>) dispatch fresh values.
+
+    my %config := new-hash-state {:theme<dark>, :refresh(30)};
 
 =head3 Builder Auto-Subscribe
 
@@ -472,14 +509,14 @@ Builder methods accept blocks instead of literal values. When a block is provide
 any C<new-state> variables read during evaluation are tracked via C<@*UI-PATHS>.
 The builder subscribes to those state paths and re-runs the block when they change.
 
-my $counter := new-state 0;
-Text.text: { "Count: $counter" };  # auto-reacts to $counter changes
+    my $counter := new-state 0;
+    Text.text: { "Count: $counter" };  # auto-reacts to $counter changes
 
 =head2 Exported Subs
 
 =over 4
 
-=item * App & Screen — C<App>, C<Screen>
+=item * App & Screen — C<App>, C<Screen>, C<Tab>
 
 =item * Layouts — C<VBox>, C<HBox>, C<Split>
 
@@ -495,8 +532,34 @@ Text.text: { "Count: $counter" };  # auto-reacts to $counter changes
 
 =item * Charts — C<Plot>, C<BarChart>, C<LineChart>, C<ScatterPlot>, C<Sparkline>, C<Heatmap>, C<Histogram>, C<Axis>, C<Legend>
 
-=item * State & Helpers — C<new-state>, C<Handler>, C<Detached>, C<OnKey>, C<OnFrame>, C<Dispatch>, C<Tick>, C<Quit>, C<CloseModal>
+=item * State & Helpers — C<new-state>, C<new-array-state>, C<new-hash-state>, C<Handler>, C<Detached>, C<OnKey>, C<OnFrame>, C<Dispatch>, C<Tick>, C<Quit>, C<CloseModal>, C<ShowModal>, C<Focus>, C<FocusNext>, C<FocusPrevious>, C<SwitchScreen>, C<Toast>
 
 =back
+
+=head2 Key Differences from C<new-state>
+
+=over 4
+
+=item C<new-state> — Returns a Proxy, for scalar values. FETCH tracks C<@*UI-PATHS>, STORE dispatches to store.
+
+=item C<new-array-state> — Returns C<ReactiveArray>, for array values. Direct mutation methods (push, pop, etc.) dispatch to store.
+
+=item C<new-hash-state> — Returns C<ReactiveHash>, for hash values. ASSIGN-KEY/DELETE-KEY dispatch to store.
+
+=back
+
+=head2 Modal Variants
+
+C<Modal> has two forms:
+
+    Modal($builder);              # extracts .modal from an existing builder
+    Modal { ... };                # creates a new modal overlay container
+
+=head2 Detached Context
+
+C<Detached> provides an isolated C<@*UI-NODES> context for building widgets
+outside a layout container. Useful in tests:
+
+    my $stream = Detached { TextStream };
 
 =end pod

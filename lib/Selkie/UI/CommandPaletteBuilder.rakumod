@@ -9,7 +9,13 @@ unit class Selkie::UI::CommandPaletteBuilder is Selkie::UI::Base;
 
 has Selkie::Widget::CommandPalette $.obj .= new;
 has @!commands;
+has Bool() $!build;
 has $!modal;
+
+submethod TWEAK(:&block, |) {
+	self.commands: $_ with &block;
+	self.build with $!build;
+}
 
 multi method add-command(:$action, Str :$label!) {
 	$.add-command: $action, :$label
@@ -17,7 +23,7 @@ multi method add-command(:$action, Str :$label!) {
 
 multi method add-command(&action, Str :$label!) {
 	@!commands.push: %(:$label, :&action);
-	$!obj.add-command(&action, :$label);
+	$!obj.add-command: :$label, with-ui-context &action;
 	self
 }
 
@@ -27,7 +33,7 @@ multi method add-command(&action, &label-block) {
 	@!commands.push: %(label-block => &label-block, action => &action);
 	self!rebuild-commands;
 	my $idx = @!commands.end;
-	$.auto-subscribe: "add-command-{$idx}", with-ui-context $*UI-APP, $*UI-PARENT, {
+	$.auto-subscribe: "add-command-{$idx}", with-ui-context {
 		self!rebuild-commands
 	}
 	self
@@ -48,7 +54,7 @@ multi method commands(@commands) {
 }
 
 multi method commands(&block) {
-	$.auto-subscribe: "commands", with-ui-context $*UI-APP, $*UI-PARENT, { self.commands: block self }
+	$.auto-subscribe: "commands", with-ui-context { self.commands: block self }
 	self
 }
 
@@ -88,10 +94,10 @@ method show-modal {
 	self
 }
 
-method on-command(&block) {
+method on-command(&block) is idempotent {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-command.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $cmd {
+	$!obj.on-command.tap: with-ui-context -> $cmd {
 		block self, $cmd
 	}
 	self

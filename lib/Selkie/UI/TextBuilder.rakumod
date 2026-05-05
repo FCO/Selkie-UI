@@ -23,7 +23,7 @@ multi method text(Str $text) {
 }
 
 multi method text(&block) {
-	$.auto-subscribe: "text", with-ui-context $*UI-APP, $*UI-PARENT, { self.text: block self }
+	$.auto-subscribe: "text", with-ui-context { self.text: block self }
 }
 
 multi method text-silent(Str $text) {
@@ -32,5 +32,5 @@ multi method text-silent(Str $text) {
 }
 
 multi method text-silent(&block) {
-	$.auto-subscribe: "text-silent", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: block self }
+	$.auto-subscribe: "text-silent", with-ui-context { self.text-silent: block self }
 }

@@ -34,5 +34,5 @@ multi method values(@values) {
 }
 
 multi method values(&block) {
-	$.auto-subscribe: "values", with-ui-context $*UI-APP, $*UI-PARENT, { self.values: block self }
+	$.auto-subscribe: "values", with-ui-context { self.values: block self }
 }

@@ -17,20 +17,20 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
-	$.auto-subscribe: "set-items", with-ui-context $*UI-APP, $*UI-PARENT, {
+	$.auto-subscribe: "set-items", with-ui-context {
 		self.set-items: block self
 	}
 }
 
-multi method on-select(&block) {
-	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx {
+multi method on-select(&block) is idempotent {
+	$!obj.on-select.tap: with-ui-context -> $idx {
 		block self, $idx
 	}
 	self
 }
 
-multi method on-activate(&block) {
-	$!obj.on-activate.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx {
+multi method on-activate(&block) is idempotent {
+	$!obj.on-activate.tap: with-ui-context -> $idx {
 		block self, $idx
 	}
 	self
@@ -45,9 +45,8 @@ method cursor {
 	$!obj.cursor
 }
 
-method on-key(Str $key, &block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-key($key, -> $ { with-ui-context($app, $parent, &block)(self, $) });
+method on-key(Str $key, &block) is idempotent {
+	return self unless $.should-add: "on-key-$key";
+	$!obj.on-key: $key, with-ui-context { block self, $ }
 	self
 }

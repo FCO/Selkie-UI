@@ -5,23 +5,49 @@ use Selkie::Sizing;
 
 unit class Selkie::UI::TableBuilder is Selkie::UI::Base;
 
+has @.columns;
+has &.block;
 has Bool $.show-scrollbar;
 has Selkie::Widget::Table $.obj .= new:
 	|(:$!show-scrollbar with $!show-scrollbar);
 
-method add-column(Str :$name!, Str :$label!, Sizing :$sizing = Sizing.flex,
-		Bool :$sortable = False, :&render, :&sort-key) {
-	$!obj.add-column(:$name, :$label, :$sizing, :$sortable, :&render, :&sort-key);
+submethod TWEAK(:&block, |) {
+	for @!columns -> %column {
+		self.add-column: |%column
+	}
+	self.rows: $_ with &block;
+}
+
+method add-column(
+	Str :$name!,
+	Str :$label!,
+	Sizing :$sizing is copy,
+	:$size is copy,
+	:$flex,
+	:$fixed,
+	Bool :$sortable = False,
+	:&render,
+	:&sort-key
+) {
+	my %size = %(
+		|(:$flex  with $flex             ),
+		|(:$fixed with $fixed            ),
+		|(fixed => $size if $size ~~ Int ),
+		|(|%$size if $size ~~ Associative),
+	);
+	$sizing //= Sizing."{ .key }"(.value) with %size.pairs.head;
+	$sizing //= Sizing.flex;
+	$!obj.add-column: :$name, :$label, :$sizing, :$sortable, :&render, :&sort-key;
 	self
 }
 
 multi method rows(@rows) {
-	$!obj.set-rows(@rows);
+	$!obj.set-rows(@rows.list);
 	self
 }
 
 multi method rows(&block) {
-	$.auto-subscribe: "rows", with-ui-context $*UI-APP, $*UI-PARENT, { self.rows: block self }
+	$.auto-subscribe: "rows", with-ui-context { self.rows: block self }
 }
 
 method clear-columns {
@@ -44,15 +70,15 @@ method select-index(UInt $idx) {
 	self
 }
 
-method on-select(&block) {
-	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx }
+method on-select(&block) is idempotent {
+	$!obj.on-select.tap: with-ui-context -> $idx { block self, $idx }
 	self
 }
 
-method on-activate(&block) {
+method on-activate(&block) is idempotent {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-activate.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx }
+	$!obj.on-activate.tap: with-ui-context -> $idx { block self, $idx }
 	self
 }
 
@@ -69,8 +95,7 @@ method sort-column {
 }
 
 method on-key(Str $key, &block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-key($key, -> $ { with-ui-context($app, $parent, &block)(self, $) });
+	return self unless $.should-add: "on-key-$key";
+	$!obj.on-key($key, with-ui-context { block self, $ });
 	self
 }

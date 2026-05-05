@@ -5,6 +5,8 @@ use Selkie::UI::Helpers;
 
 unit class Selkie::UI::Base;
 
+has %.already-added;
+
 submethod TWEAK(:$size, :$style, |) {
 	.push: self with @*UI-NODES
 }
@@ -12,9 +14,8 @@ submethod TWEAK(:$size, :$style, |) {
 my %count;
 method auto-subscribe($method, &block) {
 	with $*UI-APP.?obj.store {
-		my $app = $*UI-APP;
-		my $parent = $*UI-PARENT;
 		my @*UI-PATHS := my @paths;
+		my $*UI-ID = my $id = join "-", $method, ++$;
 		block;
 		@paths .= unique: :with(&[eqv]);
 		for @paths -> @path {
@@ -23,18 +24,24 @@ method auto-subscribe($method, &block) {
 			.subscribe-path-callback(
 				"{ $base }-{ ++%count{$base} }",
 				@path,
-				with-ui-context($app, $parent, &block),
+				with-ui-context(&block),
 				$.obj ~~ Selkie::Widget ?? $.obj !! Selkie::Widget
 			);
 		}
-	} else {
-		block;
-	}
+	} else { block }
 	self
 }
 
+method should-add(Str $event --> Bool()) {
+	!%!already-added{join "-", $*UI-ID // "none", $event}++
+}
+
+method modal($ where { .obj.^can: "modal" }:) {
+	self.&selkie-obj.modal
+}
+
 multi method style(&block) {
-	$.auto-subscribe: "style", with-ui-context $*UI-APP, $*UI-PARENT, { self.style: |block self }
+	$.auto-subscribe: "style", with-ui-context { self.style: |block self }
 }
 
 multi method style(|c) {
@@ -43,18 +50,12 @@ multi method style(|c) {
 	self
 }
 
-multi method size(Pair $pair) {
-	$.size: |$pair
-}
-
-multi method fixed(UInt $fixed) { $.size: :$fixed }
-
-multi method fixed(&block) { $.size: -> $ { fixed => block self } }
-
-multi method size(UInt $fixed) {
-	$.size: :$fixed
-}
-
+multi method fixed(UInt $fixed)  { $.size: :$fixed }
+multi method fixed(&block)       { $.size: -> $ { fixed => block self } }
+multi method flex($flex)         { $.size: :$flex }
+multi method flex(&block)        { $.size: -> $ { flex => block self } }
+multi method size(Pair $pair)    { $.size: |$pair }
+multi method size(UInt $fixed)   { $.size: :$fixed }
 multi method size(UInt :$fixed!) {
 	$.obj.update-sizing: Sizing.fixed($fixed);
 	self
@@ -65,10 +66,6 @@ multi method size(Numeric :$percent!) {
 	self
 }
 
-multi method flex($flex) { $.size: :$flex }
-
-multi method flex(&block) { $.size: -> $ { flex => block self } }
-
 multi method size(:$flex is copy) {
 	my $value = $flex ~~ UInt ?? $flex.Int !! 1;
 	$.obj.update-sizing: Sizing.flex($value);
@@ -76,7 +73,7 @@ multi method size(:$flex is copy) {
 }
 
 multi method size(&block) {
-	$.auto-subscribe: "size", with-ui-context $*UI-APP, $*UI-PARENT, { self.size: |block self }
+	$.auto-subscribe: "size", with-ui-context { self.size: |block self }
 }
 
 multi method focus(Bool() $focus = True) {
@@ -85,7 +82,7 @@ multi method focus(Bool() $focus = True) {
 }
 
 multi method focus(&block) {
-	$.auto-subscribe: "focus", with-ui-context $*UI-APP, $*UI-PARENT, { self.focus: block self }
+	$.auto-subscribe: "focus", with-ui-context { self.focus: block self }
 }
 
 method mark-dirty {
@@ -115,6 +112,8 @@ dynamic variables are available:
 
 =item C<@*UI-NODES> — Stack of child widgets being constructed
 
+=item C<$*UI-ID> — Unique string per auto-subscribe chain, used for event deduplication
+
 =back
 
 =head2 Methods
@@ -129,6 +128,18 @@ registering the builder with its parent container.
 Sets up store subscriptions for reactive value blocks. For each path in C<@*UI-PATHS>,
 registers a callback that re-invokes C<&block> when that state path changes. Uses
 C<with-ui-context> to preserve C<$*UI-APP> and C<$*UI-PARENT> across async boundaries.
+Also sets C<$*UI-ID> for event deduplication.
+
+=head3 C<should-add(Str $event --> Bool)>
+
+Checks whether an event handler has already been registered for the current
+C<$*UI-ID> context. Returns C<False> for duplicates, preventing handler
+proliferation when builders are reconfigured.
+
+=head3 C<modal()>
+
+Extracts the underlying widget's C<.modal> attribute, if available. Used by
+C<Modal($builder)> and C<ShowModal>.
 
 =head3 C<style(|c)>
 
@@ -151,8 +162,28 @@ Four C<multi> variants for widget sizing:
 
 =back
 
+=head3 C<fixed> / C<flex>
+
+Convenience methods that delegate to C<size>:
+
+=over 4
+
+=item C<fixed(UInt $cells)> — Sets fixed size in cells
+
+=item C<fixed(&block)> — Reactive fixed size
+
+=item C<flex($weight)> — Sets flex size with optional weight
+
+=item C<flex(&block)> — Reactive flex size
+
+=back
+
 =head3 C<focus>
 
 Proxies focus to the application: C<$*UI-APP.obj.focus($.obj)>.
+
+=head3 C<mark-dirty>
+
+Marks the underlying widget for re-render on the next frame.
 
 =end pod

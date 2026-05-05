@@ -28,10 +28,10 @@ method content($widget, Bool :$destroy = True) {
 	self
 }
 
-method on-close(&block) {
+method on-close(&block) is idempotent {
 	my $app = $*UI-APP;
 	my $parent = $*UI-PARENT;
-	$!obj.on-close.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $received { block self, $received }
+	$!obj.on-close.tap: with-ui-context -> $received { block self, $received }
 	self
 }
 

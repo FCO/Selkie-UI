@@ -35,7 +35,11 @@ App {
 		}
 
 		Border :title<Log>, :size(:flex), {
-			TextStream.max-lines(1000).append: { $log-message };
+			given TextStream() {
+				.max-lines: 1000;
+				.append: 'Press s (or focus and Enter on the button) to start.';
+				.append: { $log-message };
+			}
 		};
 
 		HBox :1size, {

@@ -23,7 +23,7 @@ multi method set($first?, $second?) {
 }
 
 multi method set(&block) {
-	self.auto-subscribe: "add", with-ui-context $*UI-APP, $*UI-PARENT, {
+	self.auto-subscribe: "add", with-ui-context {
 		$ = block self;
 		self.set: |@*UI-NODES
 	}
@@ -35,7 +35,7 @@ multi method add($node) {
 }
 
 multi method add(&block) {
-	self.auto-subscribe: "add", with-ui-context $*UI-APP, $*UI-PARENT, {
+	self.auto-subscribe: "add", with-ui-context {
 		$ = block self;
 		for @*UI-NODES -> $node {
 			self.add: $node
@@ -50,7 +50,7 @@ multi method orientation(Str $orientation!) {
 }
 
 multi method orientation(&block) {
-	$.auto-subscribe: "orientation", with-ui-context $*UI-APP, $*UI-PARENT, { self.orientation: block self }
+	$.auto-subscribe: "orientation", with-ui-context { self.orientation: block self }
 }
 
 multi method ratio(Numeric $ratio!) {
@@ -59,7 +59,7 @@ multi method ratio(Numeric $ratio!) {
 }
 
 multi method ratio(&block) {
-	$.auto-subscribe: "ratio", with-ui-context $*UI-APP, $*UI-PARENT, { self.ratio: block self }
+	$.auto-subscribe: "ratio", with-ui-context { self.ratio: block self }
 }
 
 multi method first($widget) {
@@ -68,7 +68,7 @@ multi method first($widget) {
 }
 
 multi method first(&block) {
-	self.auto-subscribe: "first", with-ui-context $*UI-APP, $*UI-PARENT, {
+	self.auto-subscribe: "first", with-ui-context {
 		$ = block self;
 		self.first: @*UI-NODES.head
 	}
@@ -80,7 +80,7 @@ multi method second($widget) {
 }
 
 multi method second(&block) {
-	self.auto-subscribe: "second", with-ui-context $*UI-APP, $*UI-PARENT, {
+	self.auto-subscribe: "second", with-ui-context {
 		$ = block self;
 		self.second: @*UI-NODES.head
 	}

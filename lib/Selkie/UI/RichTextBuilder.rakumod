@@ -29,7 +29,7 @@ has Selkie::Widget::RichText $.obj .= new:
 }
 
 multi method content(&block) {
-	$.auto-subscribe: "content", with-ui-context $*UI-APP, $*UI-PARENT, { self.content: block self }
+	$.auto-subscribe: "content", with-ui-context { self.content: block self }
 }
 
 method truncated-top(Bool $value = True) {

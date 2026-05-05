@@ -63,7 +63,7 @@ App {
 		:style{ :fg(0x7AA2F7), :bold };
 
 		Border :title<Chat>, {
-			CardList {
+			CardList :select-last, {
 				@messages.map: -> %message {
 					my Str() $speaker    = %message<speaker> // 'unknown';
 					my Str() $text       = %message<text>    // '';
@@ -71,12 +71,13 @@ App {
 					my       $name-style = Selkie::Style.new: :$fg, :bold;
 					my       $body-style = Selkie::Style.new: :fg(0xEEEEEE);
 
-					my $widget = RichText.content: [
-						{ text => "$speaker: ", style => $name-style },
-						{ text => $text,        style => $body-style },
-					];
-					my $root = Border.content: $widget;
-
+					my $widget;
+					my $root = Border {
+						$widget = RichText.content: [
+							{ text => "$speaker: ", style => $name-style },
+							{ text => $text,        style => $body-style },
+						];
+					}
 					%(
 						:$widget,
 						:$root,
@@ -85,12 +86,13 @@ App {
 					)
 				}
 			}
-		};
+		}
 
-		Border :title<Compose>, {
-			MultiLineInput.placeholder(
-				'Type a message — Ctrl+Enter to send'
-			).on-submit: -> $input, $text {
+		Border :title<Compose>, :3size, {
+			MultiLineInput(
+				:1size,
+				:placeholder('Type a message — Ctrl+Enter to send')
+			).focus.on-submit: -> $input, $text {
 				my $trim = $text.trim;
 				if $trim.chars {
 					@messages.push: { speaker => 'you', text => $trim };

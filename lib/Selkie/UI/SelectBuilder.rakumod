@@ -12,7 +12,7 @@ multi method set-items(@items) {
 }
 
 multi method set-items(&block) {
-	$.auto-subscribe: "set-items", with-ui-context $*UI-APP, $*UI-PARENT, { self.set-items(block self) }
+	$.auto-subscribe: "set-items", with-ui-context { self.set-items(block self) }
 }
 
 method placeholder(Str $placeholder) {
@@ -26,10 +26,10 @@ multi method select-index(UInt $idx) {
 }
 
 multi method select-index(&block) {
-	$.auto-subscribe: "select-index", with-ui-context $*UI-APP, $*UI-PARENT, { self.select-index: block self }
+	$.auto-subscribe: "select-index", with-ui-context { self.select-index: block self }
 }
 
-multi method on-change(&block) {
-	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $idx { block self, $idx }
+multi method on-change(&block) is idempotent {
+	$!obj.on-change.tap: with-ui-context -> $idx { block self, $idx }
 	self
 }

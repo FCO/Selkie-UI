@@ -32,5 +32,5 @@ multi method data(@data) {
 }
 
 multi method data(&block) {
-	$.auto-subscribe: "data", with-ui-context $*UI-APP, $*UI-PARENT, { self.data: block self }
+	$.auto-subscribe: "data", with-ui-context { self.data: block self }
 }

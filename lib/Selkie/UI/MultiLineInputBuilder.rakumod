@@ -23,7 +23,7 @@ multi method text(Str $text) {
 }
 
 multi method text(&block) {
-	$.auto-subscribe: "text", with-ui-context $*UI-APP, $*UI-PARENT, { self.text: block self }
+	$.auto-subscribe: "text", with-ui-context { self.text: block self }
 }
 
 multi method text-silent(Any:U) {}
@@ -34,7 +34,7 @@ multi method text-silent(Str $text) {
 }
 
 multi method text-silent(&block) {
-	$.auto-subscribe: "text-silent", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: block self }
+	$.auto-subscribe: "text-silent", with-ui-context { self.text-silent: block self }
 }
 
 multi method placeholder(Any:U) {}
@@ -45,22 +45,22 @@ multi method placeholder(Str $placeholder) {
 }
 
 multi method placeholder(&block) {
-	$.auto-subscribe: "placeholder", with-ui-context $*UI-APP, $*UI-PARENT, { self.placeholder: block self }
+	$.auto-subscribe: "placeholder", with-ui-context { self.placeholder: block self }
 }
 
 multi method clear(Bool() $clear = True) { $!obj.clear if $clear }
 
 multi method clear(&block) {
-	$.auto-subscribe: "clear", with-ui-context $*UI-APP, $*UI-PARENT, { self.text-silent: "" if block self }
+	$.auto-subscribe: "clear", with-ui-context { self.text-silent: "" if block self }
 }
 
-method on-submit(&block) {
-	$!obj.on-submit.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $text { block self, $text };
+method on-submit(&block) is idempotent {
+	$!obj.on-submit.tap: with-ui-context -> $text { block self, $text };
 	self
 }
 
-method on-change(&block) {
-	$!obj.on-change.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $text {
+method on-change(&block) is idempotent {
+	$!obj.on-change.tap: with-ui-context -> $text {
 		block self, $text
 	}
 	self

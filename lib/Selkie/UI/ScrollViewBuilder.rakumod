@@ -34,7 +34,7 @@ multi method scroll-to-start(Bool $scroll = True) {
 }
 
 multi method scroll-to-start(&block) {
-	$.auto-subscribe: "scroll-to-start", with-ui-context $*UI-APP, $*UI-PARENT, { self.scroll-to-start: block self }
+	$.auto-subscribe: "scroll-to-start", with-ui-context { self.scroll-to-start: block self }
 }
 
 multi method scroll-to-end(Bool $scroll = True) {
@@ -43,7 +43,7 @@ multi method scroll-to-end(Bool $scroll = True) {
 }
 
 multi method scroll-to-end(&block) {
-	$.auto-subscribe: "scroll-to-end", with-ui-context $*UI-APP, $*UI-PARENT, { self.scroll-to-end: block self }
+	$.auto-subscribe: "scroll-to-end", with-ui-context { self.scroll-to-end: block self }
 }
 
 method clear { $!obj.clear }
@@ -61,7 +61,7 @@ multi method content(@widgets) {
 }
 
 multi method content(&block) {
-	$.auto-subscribe: "content", with-ui-context $*UI-APP, $*UI-PARENT, {
+	$.auto-subscribe: "content", with-ui-context {
 		$ = block self;
 		self.content: @*UI-NODES
 	}

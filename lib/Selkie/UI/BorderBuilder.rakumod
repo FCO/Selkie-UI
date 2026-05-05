@@ -23,7 +23,7 @@ multi method title(Str $title) {
 }
 
 multi method title(&title-block) {
-	$.auto-subscribe: "title", with-ui-context $*UI-APP, $*UI-PARENT, { self.title: title-block self }
+	$.auto-subscribe: "title", with-ui-context { self.title: title-block self }
 }
 
 multi method hide-top-border(Bool $hide = True) {
@@ -32,7 +32,7 @@ multi method hide-top-border(Bool $hide = True) {
 }
 
 multi method hide-top-border(&block) {
-	$.auto-subscribe: "hide-top-border", with-ui-context $*UI-APP, $*UI-PARENT, { self.hide-top-border: block self }
+	$.auto-subscribe: "hide-top-border", with-ui-context { self.hide-top-border: block self }
 }
 
 multi method hide-bottom-border(Bool $hide = True) {
@@ -41,7 +41,7 @@ multi method hide-bottom-border(Bool $hide = True) {
 }
 
 multi method hide-bottom-border(&block) {
-	$.auto-subscribe: "hide-bottom-border", with-ui-context $*UI-APP, $*UI-PARENT, { self.hide-bottom-border: block self }
+	$.auto-subscribe: "hide-bottom-border", with-ui-context { self.hide-bottom-border: block self }
 }
 
 multi method content($widget, Bool :$destroy = True) {
@@ -50,7 +50,7 @@ multi method content($widget, Bool :$destroy = True) {
 }
 
 multi method content(&block) {
-	$.auto-subscribe: "content", with-ui-context $*UI-APP, $*UI-PARENT, { self!set-content-from-block(&block) }
+	$.auto-subscribe: "content", with-ui-context { self!set-content-from-block(&block) }
 }
 
 method !set-content-from-block(&block) {

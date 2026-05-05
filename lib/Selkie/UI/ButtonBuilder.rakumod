@@ -13,10 +13,10 @@ multi method label(Str $label) {
 }
 
 multi method label(&label) {
-	$.auto-subscribe: "label", with-ui-context $*UI-APP, $*UI-PARENT, { self.label: label self }
+	$.auto-subscribe: "label", with-ui-context { self.label: label self }
 }
 
-method on-press(&block) {
-	$!obj.on-press.tap: with-ui-context $*UI-APP, $*UI-PARENT, { block self }
+method on-press(&block) is idempotent {
+	$!obj.on-press.tap: with-ui-context { block self }
 	self
 }

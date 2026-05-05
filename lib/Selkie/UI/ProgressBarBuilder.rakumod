@@ -12,7 +12,7 @@ multi method progress(Numeric $value) {
 }
 
 multi method progress(&block) {
-	$.auto-subscribe: "progress", with-ui-context $*UI-APP, $*UI-PARENT, { self.progress: block self }
+	$.auto-subscribe: "progress", with-ui-context { self.progress: block self }
 }
 
 multi method indeterminate(Bool $indet = True) {
@@ -21,7 +21,7 @@ multi method indeterminate(Bool $indet = True) {
 }
 
 multi method indeterminate(&block) {
-	$.auto-subscribe: "indeterminate", with-ui-context $*UI-APP, $*UI-PARENT, { self.indeterminate: block self }
+	$.auto-subscribe: "indeterminate", with-ui-context { self.indeterminate: block self }
 }
 
 multi method show-percentage(Bool $show = True) {
@@ -30,7 +30,7 @@ multi method show-percentage(Bool $show = True) {
 }
 
 multi method show-percentage(&block) {
-	$.auto-subscribe: "show-percentage", with-ui-context $*UI-APP, $*UI-PARENT, { self.show-percentage: block self }
+	$.auto-subscribe: "show-percentage", with-ui-context { self.show-percentage: block self }
 }
 
 method tick {

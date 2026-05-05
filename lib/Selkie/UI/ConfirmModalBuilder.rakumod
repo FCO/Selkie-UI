@@ -18,7 +18,9 @@ submethod TWEAK(
 	:$yes-label,
 	:$no-label,
 	:$width-ratio,
-	:$height-ratio
+	:$height-ratio,
+
+	:&on-result,
 ) {
 	self.build:
 	:$title,
@@ -26,7 +28,9 @@ submethod TWEAK(
 	:$yes-label,
 	:$no-label,
 	:$width-ratio,
-	:$height-ratio
+	:$height-ratio;
+
+	self.on-result: $_ with &on-result
 }
 
 method build(
@@ -48,8 +52,8 @@ method build(
 	self
 }
 
-method on-result(&block) {
-	$!obj.on-result.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $result { block self, $result }
+method on-result(&block) is idempotent {
+	$!obj.on-result.tap: with-ui-context -> $result { block self, $result }
 	self
 }
 

@@ -12,7 +12,7 @@ multi method show(Str $message, :$duration, :$style) {
 }
 
 multi method show(&block) {
-	$.auto-subscribe: "show", with-ui-context $*UI-APP, $*UI-PARENT, { self.show: block self }
+	$.auto-subscribe: "show", with-ui-context { self.show: block self }
 }
 
 method tick(--> Bool) { $!obj.tick }

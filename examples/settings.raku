@@ -30,12 +30,11 @@ App {
 				Text :text<Name>, :1size, :style{ :fg(0x999999) };
 				given TextInput :placeholder('Your display name') {
 					.on-change: -> $, $v {
-						note "----> on-change: $v";
 						%form<name>    = $v;
 						%form<dirty> ||= True
 					}
 					.text-silent:  { %form<name> // '' }
-					.focus: { %form<name>:!exists }
+					.focus: { !%form<dirty> }
 				}
 			}
 		}
@@ -64,7 +63,7 @@ App {
 					.check: { %form<notifications> // True }
 					.on-change: -> $, $v {
 						%form<notifications> = $v;
-						%form<dirty>       ||= True;
+						%form<dirty> ||= True;
 					}
 				}
 			}
@@ -120,7 +119,7 @@ App {
 			}
 		}
 
-		Text {
+		Text :style{ :fg(0x888888), :italic }, {
 			my ($name, $dirty) = %form<name dirty>;
 
 			do if !$name {

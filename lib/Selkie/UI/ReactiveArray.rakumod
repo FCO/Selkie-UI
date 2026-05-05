@@ -9,7 +9,7 @@ method !get {
 	self!get-only
 }
 
-method !get-only { $!store.get-in: $!name }
+method !get-only { $!store.get-in($!name).list }
 
 method list { self!get }
 
@@ -45,9 +45,12 @@ method DELETE-POS(Int $pos) {
 	$val
 }
 
-method elems { self!get.elems }
+method elems   { self!get.elems }
 method Numeric { $.elems }
-method Int { $.Numeric }
+method Rat     { $.Numeric.Rat }
+method Real    { $.Numeric.Real }
+method Int     { $.Numeric.Int }
+method Bool    { $.elems != 0 }
 
 method push(\values) {
 	my @current = self!get-only;

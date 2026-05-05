@@ -23,7 +23,7 @@ multi method set-file(Str $file) {
 }
 
 multi method file(&block) {
-	$.auto-subscribe: "file", with-ui-context $*UI-APP, $*UI-PARENT, { self.file: block self }
+	$.auto-subscribe: "file", with-ui-context { self.file: block self }
 }
 
 method clear-image {

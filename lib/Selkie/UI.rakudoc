@@ -39,6 +39,17 @@ The DSL handles the glue between your declarative definitions and Selkie's imper
 runtime, including state management with automatic UI updates when reactive variables
 change.
 
+=head1 Dynamic Variables
+
+Builder context flows through dynamic variables. These are set by C<App>, C<Screen>,
+and layout containers, and are only available within their blocks:
+
+=item1 C<$*UI-APP> — The running application object (store, rendering, event loop)
+=item1 C<$*UI-PARENT> — The parent builder for tree hierarchy
+=item1 C<@*UI-PATHS> — Tracks state paths read during block evaluation (for auto-subscribe)
+=item1 C<@*UI-NODES> — Stack of child nodes being constructed
+=item1 C<$*UI-ID> — Unique string per auto-subscribe chain for event deduplication
+
 =head1 State Management
 
 =head2 new-state
@@ -46,7 +57,7 @@ change.
 C<new-state($default, :$name, :$event)> creates a reactive scalar state variable
 that automatically dispatches updates and re-renders affected UI elements. Returns
 a Proxy where reads track the state path in C<@*UI-PATHS> and writes dispatch
-events through the store.
+events through the store. Use for scalar values (Str, Int, Bool).
 
 =begin code :lang<raku>
 my $counter := new-state 0;
@@ -83,10 +94,37 @@ my %config := new-hash-state {:theme<dark>, :refresh(30)};
 
 =head1 Block-Based Setters
 
-Many builder methods accept a block instead of a value. The block is evaluated once
-and the builder auto-subscribes to any state read inside it, re-running the setter
-when those states change. These reactive setters require an active C<App> because
-auto-subscribe uses C<$*UI-APP> and the store.
+Many builder methods accept a block instead of a literal value. When a block is
+provided, the builder:
+
+=item1 Evaluates the block once to get the initial value
+=item1 Tracks any C<new-state> variables read inside the block via C<@*UI-PATHS>
+=item1 Subscribes to those state paths so the setter re-runs when states change
+=item1 Updates the widget with the new value automatically
+
+Example:
+
+=begin code :lang<raku>
+my $counter := new-state 0;
+Text.text: { "Count: $counter" };
+=end code
+
+These reactive setters require an active C<App> because auto-subscribe uses
+C<$*UI-APP> and the store.
+
+=head1 Builder Lifecycle
+
+=item1 C<TWEAK> fires on construction, pushing the builder onto C<@*UI-NODES> for parent capture
+=item1 Parent iterates C<@*UI-NODES> after the block to collect children
+=item1 Chained method calls configure the underlying C<.obj> widget
+=item1 Block-valued setters trigger auto-subscribe for reactive updates
+
+When building outside an C<App> (e.g., in tests), use C<Detached> to set up
+C<@*UI-NODES>:
+
+=begin code :lang<raku>
+my $stream = Detached { TextStream };
+=end code
 
 =head1 Builders
 
@@ -97,6 +135,7 @@ chainable builder object that wraps the underlying widget.
 
 =item1 C<App> — Application entry point that initializes the UI and starts the event loop
 =item1 C<Screen> — Named screens that can be switched between
+=item1 C<Tab> — Named screen for use inside C<TabBar> (creates a Screen)
 =item1 C<VBox>, C<HBox>, C<Split> — Layout containers for stacking or splitting widgets
 =item1 C<Border>, C<Modal>, C<ScrollView> — Container and decorator widgets
 =item1 C<CardList> — Scrollable list of variable-height widgets
@@ -140,7 +179,7 @@ App helpers that interact with the runtime:
 =item1 C<Tick> — Tick the store immediately
 =item1 C<ShowModal> — Open a modal dialog
 =item1 C<CloseModal> — Close the currently open modal
-=item1 C<Focus> — Focus a specific widget
+=item1 C<Focus> — Focus a specific widget (returns the widget for chaining)
 =item1 C<FocusNext> — Move focus to the next widget
 =item1 C<FocusPrevious> — Move focus to the previous widget
 =item1 C<SwitchScreen> — Switch to a named screen
@@ -217,21 +256,12 @@ App {
 }
 =end code
 
-The C<App> block is the entry point that initializes the application. The C<new-state>
-function creates a reactive state variable bound with C<:=>, initialized as zero. The
-C<VBox> widget arranges its children vertically. C<Button.label> with a block argument
-computes the label text. The ternary operator shows "BLA 0" when the value is zero,
-otherwise "BLE $val". C<.on-press> registers a handler that runs when the user clicks
-the button. The handler increments the counter with C<++$val>, triggering a UI update.
-
 =para L<![](./test.gif)|./test.gif>
 
 =head2 ListView with reactive items
 
 This example binds a list view to a reactive array. When the array changes, the list
-updates automatically. For reactive array data, consider using L<new-array-state>
-instead of C<new-state> — it provides direct mutation methods (C<push>, C<shift>,
-C<splice>) that dispatch updates automatically.
+updates automatically.
 
 =begin code :lang<raku>
 use Selkie::UI;
@@ -247,6 +277,25 @@ App {
 }
 =end code
 
+=head2 TabBar with tabs
+
+This example shows a TabBar with two tabs, each containing different content.
+
+=begin code :lang<raku>
+use Selkie::UI;
+
+App {
+    Screen :name<main>, {
+        TabBar {
+            my $content = Border;
+            Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
+            Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
+            $content
+        }
+    }
+}
+=end code
+
 =head1 EXPORTS
 
 =head2 App and Screen
@@ -256,10 +305,28 @@ App(&block, |c)
 
 Application entry point that initializes the UI and starts the event loop.
 
+The block receives the builder as C<$_> and runs inside the application context.
+All builder functions must be called inside an C<App> block.
+
 =for head2 :numbered
 Screen(&block, Str :$name = "main", |c)
 
-Named screens that can be switched between.
+Named screens that can be switched between with C<SwitchScreen>.
+
+=for head2 :numbered
+Screen($node, Str :$name = "main", |c)
+
+Screen variant that accepts an existing widget node instead of a block.
+
+=for head2 :numbered
+Tab(&block, Str :$name!, Str :$label!, |c)
+
+Named screen for use inside a C<TabBar>. Returns a ScreenBuilder. The block
+receives the screen builder as C<$_>.
+
+=begin code :lang<raku>
+Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
+=end code
 
 =head2 Layout Containers
 
@@ -274,21 +341,34 @@ HBox(&block, :$size, :$style, |c)
 Horizontal box layout. Stacks children left-to-right.
 
 =for head2 :numbered
-Split(&block, :$size, :$style, |c)
+Split(&block?, :$ratio, :$size, :$style, |c)
 
-Split container. Divides space between children.
+Split container. Divides space between children. Optional C<:$ratio> sets
+the split proportion.
 
 =head2 Inputs and Selection
 
 =for head2 :numbered
 Button(:$label, :$size, :$style, |c)
 
-Pressable button with label. Supports C<.on-press> handler.
+Pressable button with label. Supports C<.on-press> handler (idempotent).
+
+Methods:
+=item1 C<.label(Str)> / C<.label(&block)> — Set or reactively bind label text
+=item1 C<.on-press(&block)> — Register click handler (idempotent)
 
 =for head2 :numbered
 TextInput(:$placeholder, :$size, :$style, |c)
 
-Single-line text input field. Supports C<.value> for current text.
+Single-line text input field.
+
+Methods:
+=item1 C<.text(Str)> / C<.text(&block)> — Get/set text
+=item1 C<.text-silent(Str)> — Set text without triggering events
+=item1 C<.on-submit(&block)> — Submit handler (idempotent)
+=item1 C<.on-change(&block)> — Change handler (idempotent)
+=item1 C<.clear> / C<.clear(&block)> — Clear input
+=item1 C<.mask(:$char!)> — Set mask character for password input
 
 =for head2 :numbered
 MultiLineInput(:$placeholder, :$max-lines, :$size, :$style, |c)
@@ -299,6 +379,11 @@ Multi-line text input area.
 Checkbox(:$label, :$size, :$style, |c)
 
 Toggleable checkbox with label.
+
+Methods:
+=item1 C<.label(Str)> / C<.label(&block)> — Set or reactively bind label
+=item1 C<.check(Bool)> / C<.check(&block)> — Set checked state
+=item1 C<.on-change(&block)> — Change handler (idempotent)
 
 =for head2 :numbered
 RadioGroup(:$size, :$style, |c)
@@ -318,63 +403,125 @@ Password input with strength meter visualization.
 =head2 Text and Rich Content
 
 =for head2 :numbered
-Text(:$text, :$size, :$style, |c)
+Text(&block?, :$text, :$size, :$style, |c)
 
-Static text display widget.
+Static text display widget. The optional block variant supports reactive
+subscriptions when used inside C<App>.
+
+Methods:
+=item1 C<.text(Str)> / C<.text(&block)> — Set or reactively bind text
+=item1 C<.text-silent(Str)> — Set text without triggering events
 
 =for head2 :numbered
 TextStream(:$placeholder, :$size, :$style, |c)
 
-Scrollable text stream. Supports C<.append> for streaming content.
+Scrollable text stream for streaming log-like content.
+
+Methods:
+=item1 C<.append(Str)> / C<.append(&block)> — Append text (block = reactive)
+=item1 C<.clear(Bool)> / C<.clear(&block)> — Clear the stream
+=item1 C<.max-lines(UInt)> — Limit visible lines
 
 =for head2 :numbered
 RichText(:$truncated-top, :$truncated-bottom, :$size, :$style, |c)
 
-Rich text widget with styled content.
+Rich text widget with styled spans.
 
 =head2 Lists and Tables
 
 =for head2 :numbered
-ListView(:$size, :$style, |c)
+ListView(&block?, :$size, :$style, |c)
 
-Scrollable list of items. Supports C<.items> for reactive data.
+Scrollable list of items. Supports C<.set-items> for reactive data.
 
-=for head2 :numbered
-Table(:$show-scrollbar, :$size, :$style, |c)
-
-Tabular data display with column headers.
-
-=for head2 :numbered
-CardList(&block, :$size, :$style, |c)
-
-Scrollable list of variable-height widget cards.
+Methods:
+=item1 C<.set-items(@items)> / C<.set-items(&block)> — Set list items
+=item1 C<.on-select(&block)> — Selection handler (idempotent)
+=item1 C<.on-activate(&block)> — Activation handler (idempotent)
+=item1 C<.on-key(Str $key, &block)> — Key handler (idempotent)
+=item1 C<.cursor> — Current cursor position
 
 =for head2 :numbered
-TabBar(:$size, :$style, |c)
+Table(&block?, :$show-scrollbar, :$size, :$style, |c)
 
-Tabbed navigation bar.
+Tabular data display with column headers. Accepts columns as array of hashes
+with C<:name>, C<:label>, C<:sizing>/C<:flex>/C<:fixed>, C<:sortable>,
+C<:render>, and C<:sort-key>. The optional block sets row data reactively.
+
+Methods:
+=item1 C<.add-column(:$name!, :$label!, ...)> — Add a column
+=item1 C<.rows(@rows)> / C<.rows(&block)> — Set or reactively bind rows
+=item1 C<.clear-columns> — Remove all columns
+=item1 C<.on-select(&block)> — Selection handler (idempotent)
+=item1 C<.on-activate(&block)> — Activation handler (idempotent)
+=item1 C<.on-key(Str $key, &block)> — Key handler
+
+=for head2 :numbered
+CardList(&block?, :$select-first, :$select-last, :$size, :$style, |c)
+
+Scrollable list of variable-height widget cards. Each item is a widget with a
+required height. Supports reactive data via block setters.
+
+Methods:
+=item1 C<.add-item($widget, :$height!, :$root, :$border)> — Add a card
+=item1 C<.set-items(@items)> / C<.set-items(&block)> — Replace all items
+=item1 C<.clear-items> — Remove all items
+=item1 C<.set-item-height(Int $idx, Int $height)> — Change item height
+=item1 C<.select-index(Int $idx)> — Select item by index
+=item1 C<.select-first(Bool)> / C<.select-last(Bool)> — Select first/last
+=item1 C<.scroll-up> / C<.scroll-down> — Scroll by one item
+=item1 C<.on-select(&block)> — Selection handler (idempotent)
+
+=for head2 :numbered
+TabBar(&block?, :$active-tab, :$size, :$style, |c)
+
+Tabbed navigation bar. Uses a declarative block-based API. The block must
+return a content container (e.g., Border) that provides C<.title> and
+C<.content> methods. Use C<Tab> inside the block to define screens.
+
+=begin code :lang<raku>
+TabBar {
+    my $content = Border;
+    Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
+    Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
+    $content
+}
+=end code
+
+Methods:
+=item1 C<.add-tab(:$name!, :$label!)> — Register a tab
+=item1 C<.remove-tab(Str $name)> — Remove a tab
+=item1 C<.clear-tabs> — Remove all tabs
+=item1 C<.select-by-name(Str $name)> — Select tab by name
+=item1 C<.select-index(UInt $idx)> — Select tab by index
+=item1 C<.on-tab-selected(&block)> — Tab change handler (idempotent)
 
 =head2 Overlays and Helpers
 
 =for head2 :numbered
-Border(&block, :$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c)
+Border(&block?, :$title, :$hide-top-border, :$hide-bottom-border, :$size, :$style, |c)
 
-Bordered container with optional title.
-
-=for head2 :numbered
-Modal(:$width-ratio, :$height-ratio, :$dim-background, :$size, :$style, |c)
-
-Modal overlay dialog.
+Bordered container with optional title. Supports reactive title via block.
 
 =for head2 :numbered
-ConfirmModal(:$size, :$style, |c)
+Modal(Selkie::UI::Base $widget)
+
+Extracts the C<.modal> widget from an existing builder. Useful with C<ShowModal>.
+
+=for head2 :numbered
+Modal(&block?, :$width-ratio, :$height-ratio, :$dim-background, :$size, :$style, |c)
+
+Modal overlay dialog with configurable size and backdrop dimming.
+
+=for head2 :numbered
+ConfirmModal(:$title, :$message, :$yes-label, :$no-label, :$width-ratio, :$height-ratio, :on-result, |c)
 
 Confirmation dialog with accept/cancel buttons.
 
 =for head2 :numbered
 Toast(Str $message, Numeric :$duration = 3e0)
 
-Temporary toast notification.
+Temporary toast notification dispatched via the app.
 
 =for head2 :numbered
 HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c)
@@ -382,36 +529,54 @@ HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c)
 Keyboard shortcut help overlay.
 
 =for head2 :numbered
-CommandPalette(:$size, :$style, |c)
+CommandPalette(&block?, :$size, :$style, |c)
 
-Command palette for fuzzy-searchable actions.
+Command palette for fuzzy-searchable actions. The optional block
+registers commands.
+
+Methods:
+=item1 C<.add-command(&action, :$label!)> — Register a command
+=item1 C<.commands(@pairs)> — Set commands from pairs
+=item1 C<.show-modal> — Show the palette modal
+=item1 C<.on-command(&block)> — Command handler (idempotent)
+=item1 C<.build> — Build the underlying modal widget
 
 =for head2 :numbered
-FileBrowser(:$size, :$style, |c)
+FileBrowser(&block?, Bool :$show-modal, Bool :$focus, :&on-select, :$size, :$style, |c)
 
-File system browser widget.
+File system browser widget that opens as a modal.
 
 =head2 Miscellaneous
 
 =for head2 :numbered
-ScrollView(:$show-scrollbar, :$size, :$style, |c)
+ScrollView(&block?, :$show-scrollbar, :$size, :$style, |c)
 
-Scrollable viewport container.
+Scrollable viewport container for overflowing content.
 
 =for head2 :numbered
 Spinner(:@frames, :$interval, :$style, :$size, |c)
 
 Animated spinner with configurable frames and interval.
 
-=for head2 :numbered
-Image(:$file, :$size, :$style, |c)
+Methods:
+=item1 C<.tick> — Advance to next frame
+=item1 C<.reset> — Reset to first frame
 
-Image display widget.
+=for head2 :numbered
+Image(&block?, :$file, :$size, :$style, |c)
+
+Image display widget. Supports reactive file binding via block.
 
 =for head2 :numbered
 ProgressBar(:$size, :$style, |c)
 
 Progress bar with configurable value.
+
+Methods:
+=item1 C<.progress(Numeric)> / C<.progress(&block)> — Set progress value
+=item1 C<.indeterminate(Bool)> — Toggle indeterminate mode
+=item1 C<.show-percentage(Bool)> — Toggle percentage display
+=item1 C<.tick> — Advance animation frame
 
 =head2 Charts
 
@@ -466,19 +631,21 @@ Chart legend for multi-series plots.
 new-state($default, :$name, :$event)
 
 Creates a reactive state variable. Returns a Proxy that auto-tracks reads and dispatches
-events on writes. Requires an active C<App> context.
+events on writes. Use for scalar values (Str, Int, Bool). Requires an active C<App> context.
 
 =for head2 :numbered
 new-array-state(@default, :$name, :$event)
 
 Creates a reactive array state. Returns a C<ReactiveArray> that implements C<Positional>
-and C<Iterable>. Bind with C<:=> to an C<@>-sigiled variable.
+and C<Iterable>. Bind with C<:=> to an C<@>-sigiled variable. Mutations dispatch
+fresh values: C<push>, C<pop>, C<shift>, C<unshift>, C<splice>, C<ASSIGN-POS>.
 
 =for head2 :numbered
 new-hash-state(%default, :$name, :$event)
 
 Creates a reactive hash state. Returns a C<ReactiveHash> that implements C<Associative>
-and C<Iterable>. Bind with C<:=> to a C<%>-sigiled variable.
+and C<Iterable>. Bind with C<:=> to a C<%>-sigiled variable. Mutations dispatch
+fresh values: C<ASSIGN-KEY>, C<DELETE-KEY>.
 
 =for head2 :numbered
 Handler(Str $name, &block)
@@ -488,12 +655,19 @@ Registers a store event handler for the given event name.
 =for head2 :numbered
 Detached(&block)
 
-Creates isolated UI node contexts without parent attachment.
+Creates isolated UI node contexts without parent attachment. Sets up C<@*UI-NODES>
+for the block. Returns the block's result if defined, otherwise the first child
+node from C<@*UI-NODES>.
+
+=begin code :lang<raku>
+my $stream = Detached { TextStream };
+=end code
 
 =for head2 :numbered
 OnKey(Str:D $spec, &handler, Str :$screen)
 
-Registers a keypress handler. C<$spec> is a key specification string.
+Registers a keypress handler. C<$spec> is a key specification string
+(e.g., C<"ctrl+p">, C<"q">, C<"tab">).
 
 =for head2 :numbered
 OnFrame(&block)
@@ -513,7 +687,7 @@ Triggers an immediate store tick (re-render cycle).
 =for head2 :numbered
 ShowModal($modal)
 
-Opens a modal dialog from a builder or widget.
+Opens a modal dialog from a builder or widget. Returns the modal widget.
 
 =for head2 :numbered
 CloseModal
@@ -523,7 +697,8 @@ Closes the currently open modal dialog.
 =for head2 :numbered
 Focus($widget)
 
-Focuses a specific widget.
+Focuses a specific widget. Returns the widget for chaining. Handles
+C<.focusable-widget> delegation automatically.
 
 =for head2 :numbered
 FocusNext
@@ -544,6 +719,11 @@ Switches to a named screen.
 Quit
 
 Exits the TUI application gracefully.
+
+=for head2 :numbered
+Toast(Str $message, Numeric :$duration = 3.0)
+
+Dispatches a transient toast notification via the app.
 
 =AUTHOR Fernando Correa de Oliveira
 

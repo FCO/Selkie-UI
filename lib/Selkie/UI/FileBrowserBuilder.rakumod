@@ -27,10 +27,8 @@ method build(
 	);
 }
 
-method on-select(&block) {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
-	$!obj.on-select.tap: with-ui-context $*UI-APP, $*UI-PARENT, -> $path {
+method on-select(&block) is idempotent {
+	$!obj.on-select.tap: with-ui-context -> $path {
 		block self, $path
 	}
 	self
