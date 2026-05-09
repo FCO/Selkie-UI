@@ -45,12 +45,4 @@ multi method add-screen($name, $) {
 	die "Error trying to add a non container as a screen called '$name'";
 }
 
-multi method theme(Selkie::Theme $theme) { $!obj.set-theme: $theme; self }
-
-multi method theme(*%theme) { $!obj.theme: Selkie::Theme.new: |%theme; self }
-
-multi method theme(&theme) {
-	$.auto-subscribe: "theme", with-ui-context { self.theme: theme self }
-}
-
 method run { $!obj.run }

@@ -45,7 +45,7 @@ multi method hide-bottom-border(&block) {
 }
 
 multi method content($widget, Bool :$destroy = True) {
-	$!obj.set-content($widget.obj, :$destroy);
+	$!obj.set-content: $widget.&selkie-obj, :$destroy;
 	self
 }
 
@@ -58,6 +58,6 @@ method !set-content-from-block(&block) {
 	my @*UI-NODES;
 	block self;
 	with @*UI-NODES.head -> $node {
-		$!obj.set-content: $_ with $node.obj;
+		$.content: $_ with $node;
 	}
 }

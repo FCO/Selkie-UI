@@ -40,6 +40,14 @@ method modal($ where { .obj.^can: "modal" }:) {
 	self.&selkie-obj.modal
 }
 
+multi method theme(Selkie::Theme $theme) { $.obj.set-theme: $theme; self }
+
+multi method theme(*%theme) { $.theme: $.obj.theme.clone: |%theme; self }
+
+multi method theme(&theme) {
+	$.auto-subscribe: "theme", with-ui-context { self.theme: theme self }
+}
+
 multi method style(&block) {
 	$.auto-subscribe: "style", with-ui-context { self.style: |block self }
 }

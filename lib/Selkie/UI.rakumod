@@ -200,7 +200,6 @@ sub CardList(&block?, |c)         is export { ss |c, CardListBuilder.new:   |(:&
 sub Split(&block?, :$ratio, |c)   is export { ss |c, SplitBuilder.new:      |(:&block with &block), |(:$ratio with $ratio), |c }
 sub Button(:$label, |c)           is export { ss |c, ButtonBuilder.new:     |(:$label with $label),                         |c }
 sub Text(&block?, :$text, |c)     is export { ss |c, TextBuilder.new:       |(:&block with &block), |(:$text with $text),   |c }
-sub TextStream(:$placeholder, |c) is export { ss |c, TextStreamBuilder.new: |(:$placeholder with $placeholder),             |c }
 sub TextInput(:$placeholder, |c)  is export { ss |c, TextInputBuilder.new:  |(:$placeholder with $placeholder),             |c }
 sub Checkbox(:$label, |c)         is export { ss |c, CheckboxBuilder.new:   |(:$label with $label),                         |c }
 sub Image(&block?, :$file, |c)    is export { ss |c, ImageBuilder.new:      |(:&block with &block), |(:$file with $file),   |c }
@@ -210,6 +209,13 @@ sub ProgressBar(|c)               is export { ss |c, ProgressBarBuilder.new:    
 sub ListView(&block?, |c)         is export { ss |c, ListViewBuilder.new:   |(:&block with &block),                         |c }
 sub ConfirmModal(|c)              is export { ss |c, ConfirmModalBuilder.new:                                               |c }
 sub TabBar(&block?, |c)           is export { ss |c, TabBarBuilder.new:     |(:&block with &block),                         |c }
+
+sub TextStream(&block?, :$placeholder, |c) is export {
+	ss |c, TextStreamBuilder.new:
+	|(:&block with &block),
+	|(:$placeholder with $placeholder),
+	|c
+}
 
 sub CommandPalette(&block?, |c) is export {
 	ss |c, CommandPaletteBuilder.new:

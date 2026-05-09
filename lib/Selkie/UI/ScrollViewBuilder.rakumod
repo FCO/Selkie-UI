@@ -10,21 +10,27 @@ has &.block;
 
 submethod TWEAK(:&block) {
 	self.content: $_ with &block;
+}
+
+multi method add($widget) {
+	$!obj.add: selkie-obj $widget;
 	self
 }
 
-method add($widget) {
-	$!obj.add: $widget.obj;
-	self
+multi method add(&block) {
+	$.auto-subscribe: "add", with-ui-context {
+		$ = block self;
+		self.add: $_ for @*UI-NODES
+	}
 }
 
 method scroll-to(UInt $row) {
-	$!obj.scroll-to($row);
+	$!obj.scroll-to: $row;
 	self
 }
 
 method scroll-by(Int $delta) {
-	$!obj.scroll-by($delta);
+	$!obj.scroll-by: $delta;
 	self
 }
 
@@ -50,7 +56,7 @@ method clear { $!obj.clear }
 
 multi method content($widget) {
 	$.clear;
-	$!obj.add: $widget.obj;
+	$!obj.add: $widget;
 	self
 }
 

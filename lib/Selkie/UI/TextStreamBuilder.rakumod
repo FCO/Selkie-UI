@@ -5,6 +5,11 @@ use Selkie::UI::Helpers;
 unit class Selkie::UI::TextStreamBuilder is Selkie::UI::Base;
 
 has Selkie::Widget::TextStream $.obj .= new;
+has &.block;
+
+submethod TWEAK(:&block, |) {
+	self.append: $_ with &block
+}
 
 method max-lines(UInt $lines) {
 	$!obj.^attributes.first(*.name eq '$!max-lines').set_value: $!obj, $lines;

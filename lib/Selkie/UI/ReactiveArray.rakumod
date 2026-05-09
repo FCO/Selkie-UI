@@ -18,7 +18,7 @@ method Array(-->Array()) { $.list }
 
 method STORE(Array() $value) {
 	$!store.dispatch: $!event, :$value;
-	$value<>
+	$value[]
 }
 
 method AT-POS(UInt $pos) {
