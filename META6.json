@@ -5,23 +5,17 @@
   ],
   "build-depends": [
     "Selkie",
-    "UUID",
-    "Terminal::ANSIParser",
-    "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
+    "UUID"
   ],
   "depends": [
     "Selkie",
-    "UUID",
-    "Terminal::ANSIParser",
-    "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
+    "UUID"
   ],
   "description": "Declarative DSL for building terminal user interfaces with the Selkie framework — reactive state management, auto-subscribe setters, and 38+ widget builders",
   "license": "Artistic-2.0",
   "name": "Selkie::UI",
   "perl": "6.d",
   "provides": {
-    "Anolis-patched::Anolis": "lib/Anolis-patched/Anolis.rakumod",
-    "Anolis-patched::Anolis::Interface": "lib/Anolis-patched/Anolis/Interface.rakumod",
     "Selkie::UI": "lib/Selkie/UI.rakumod",
     "Selkie::UI::AppBuilder": "lib/Selkie/UI/AppBuilder.rakumod",
     "Selkie::UI::AxisBuilder": "lib/Selkie/UI/AxisBuilder.rakumod",
@@ -61,12 +55,12 @@
     "Selkie::UI::SplitBuilder": "lib/Selkie/UI/SplitBuilder.rakumod",
     "Selkie::UI::TabBarBuilder": "lib/Selkie/UI/TabBarBuilder.rakumod",
     "Selkie::UI::TableBuilder": "lib/Selkie/UI/TableBuilder.rakumod",
-    "Selkie::UI::Test::TTY": "lib/Selkie/UI/Test/TTY.rakumod",
     "Selkie::UI::TextBuilder": "lib/Selkie/UI/TextBuilder.rakumod",
     "Selkie::UI::TextInputBuilder": "lib/Selkie/UI/TextInputBuilder.rakumod",
     "Selkie::UI::TextStreamBuilder": "lib/Selkie/UI/TextStreamBuilder.rakumod",
     "Selkie::UI::ToastBuilder": "lib/Selkie/UI/ToastBuilder.rakumod",
-    "Selkie::UI::VBoxBuilder": "lib/Selkie/UI/VBoxBuilder.rakumod"
+    "Selkie::UI::VBoxBuilder": "lib/Selkie/UI/VBoxBuilder.rakumod",
+    "Selkie::UI::ViewportedCardListBuilder": "lib/Selkie/UI/ViewportedCardListBuilder.rakumod"
   },
   "resources": [
   ],
@@ -75,9 +69,7 @@
   ],
   "test-depends": [
     "Selkie",
-    "UUID",
-    "Terminal::ANSIParser",
-    "Anolis:ver<1.0.0+>:auth<zef:patrickb>"
+    "UUID"
   ],
   "version": "0.0.1"
 }

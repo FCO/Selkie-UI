@@ -89,7 +89,6 @@ multi method set-items(&block) {
 				} else {
 					$item
 				}
-				dd [:$widget, :$border, :$height];
 				%(
 					:$widget,
 					:root($border),
@@ -171,10 +170,11 @@ method on-select(&block) is idempotent {
 
 =begin pod
 
-=head1 Selkie::UI::CardListBuilder
+=head1 Selkie::UI::ViewportedCardListBuilder
 
-Builder for a card list widget — a vertically scrollable list of items
-with configurable heights and optional borders.
+Builder for a viewported card list widget — a vertically scrollable list
+of items with viewport optimization, configurable heights, and optional
+borders.
 
 =head2 Methods
 

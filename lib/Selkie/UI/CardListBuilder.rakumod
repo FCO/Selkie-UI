@@ -84,7 +84,6 @@ multi method set-items(&block) {
 				} else {
 					$item
 				}
-				dd [:$widget, :$border, :$height];
 				%(
 					:$widget,
 					:root($border),

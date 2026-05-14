@@ -143,11 +143,17 @@ registers a callback that re-invokes C<&block> when that state path changes. Use
 C<with-ui-context> to preserve C<$*UI-APP> and C<$*UI-PARENT> across async boundaries.
 Also sets C<$*UI-ID> for event deduplication.
 
+=head3 C<%!already-added>
+
+Internal hash attribute tracking event handler registrations. Keys are
+C<"$*UI-ID-$event-name"> strings. Used by C<should-add> for deduplication.
+
 =head3 C<should-add(Str $event --> Bool)>
 
 Checks whether an event handler has already been registered for the current
 C<$*UI-ID> context. Returns C<False> for duplicates, preventing handler
-proliferation when builders are reconfigured.
+proliferation when builders are reconfigured. Used by the C<is idempotent>
+trait defined in C<Selkie::UI::Helpers>.
 
 =head3 C<modal()>
 

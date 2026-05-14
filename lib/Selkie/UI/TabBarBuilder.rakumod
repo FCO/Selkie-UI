@@ -16,7 +16,9 @@ has                        &.set-content = -> $_, $content, (:$label, :$screen, 
 }
 
 submethod TWEAK(:&block, |) {
-	my @nodes := @*UI-NODES;
+	return unless &block;
+	my @nodes := try @*UI-NODES;
+	return unless @nodes;
 	{
 		my @*UI-NODES;
 		$!content = block self;
@@ -182,5 +184,29 @@ Syncs the underlying widget to the given application.
 =head3 C<set-focused(Bool $focused)>
 
 Sets whether the tab bar has focus.
+
+=head3 C<focus(Bool $focused = True)>
+
+Alias for C<set-focused>. Sets whether the tab bar has focus.
+
+=head2 TWEAK
+
+Constructs the tab bar and processes the block-based API. The TWEAK submethod:
+
+=over 4
+
+=item 1. Returns early if no block is provided (allowing incremental configuration via method calls)
+
+=item 2. Captures the parent C<@*UI-NODES> safely (gracefully handles missing dynamic variables)
+
+=item 3. Creates an inner C<@*UI-NODES> context for C<Tab> screen registrations
+
+=item 4. Executes the block to build content container and tab screens
+
+=item 5. Registers the C<on-tab-selected> handler for content switching
+
+=item 6. Sets the active tab (defaults to the first tab)
+
+=back
 
 =end pod
