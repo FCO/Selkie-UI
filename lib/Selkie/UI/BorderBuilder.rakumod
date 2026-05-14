@@ -12,6 +12,7 @@ has Selkie::Widget::Border $.obj .= new:
 |(:$!hide-top-border with $!hide-top-border),
 |(:$!hide-bottom-border with $!hide-bottom-border);
 has &.block;
+has $!content;
 
 submethod TWEAK(:&block) {
 	self.content: $_ with &block;
@@ -44,7 +45,10 @@ multi method hide-bottom-border(&block) {
 	$.auto-subscribe: "hide-bottom-border", with-ui-context { self.hide-bottom-border: block self }
 }
 
+multi method get-content { $!content }
+
 multi method content($widget, Bool :$destroy = True) {
+	$!content = $widget;
 	$!obj.set-content: $widget.&selkie-obj, :$destroy;
 	self
 }

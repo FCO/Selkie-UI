@@ -64,26 +64,19 @@ App {
 
 		Border :title<Chat>, {
 			CardList :select-last, {
-				@messages.map: -> %message {
+				for @messages -> %message {
 					my Str() $speaker    = %message<speaker> // 'unknown';
 					my Str() $text       = %message<text>    // '';
 					my       $fg         = $speaker eq 'bot' ?? 0x9ECE69 !! 0x7AA2F7;
 					my       $name-style = Selkie::Style.new: :$fg, :bold;
 					my       $body-style = Selkie::Style.new: :fg(0xEEEEEE);
 
-					my $widget;
-					my $root = Border {
-						$widget = RichText.content: [
+					Border :3size, {
+						RichText.content: [
 							{ text => "$speaker: ", style => $name-style },
 							{ text => $text,        style => $body-style },
 						];
 					}
-					%(
-						:$widget,
-						:$root,
-						:border($root),
-						:3height,
-					)
 				}
 			}
 		}

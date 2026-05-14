@@ -1,11 +1,15 @@
 use Selkie::UI::Base;
 use Selkie::Widget;
-use Selkie::Widget::CardList;
+use Selkie::Widget::ViewportedCardList;
 use Selkie::UI::Helpers;
 
-unit class Selkie::UI::CardListBuilder is Selkie::UI::Base;
+unit class Selkie::UI::ViewportedCardListBuilder is Selkie::UI::Base;
 
-has Selkie::Widget::CardList $.obj .= new;
+has $.bottom-anchor;
+has $.follow-bottom;
+has Selkie::Widget::ViewportedCardList $.obj .= new:
+|(:$!bottom-anchor with $!bottom-anchor),
+|(:$!follow-bottom with $!follow-bottom);
 has &.block;
 has $.select-first;
 has $.select-last;
@@ -25,27 +29,28 @@ submethod TWEAK(:&block, :$select-first, :$select-last, |) {
 	self
 }
 
-multi method add-item($widget, :$height, :$root = $*UI-PARENT, :$border) {
+multi method add-item($widget, :$height!, :$root = $*UI-PARENT, :$border) {
 	$!obj.add-item(
 		$widget.&selkie-obj,
 		:root($root.&selkie-obj),
-		|(:$height with $height),
+		:$height,
 		|(:border(.&selkie-obj) with $border));
 
 	unless $*UI-MULTIPLE-ADD-ITEMS {
+		my @*UI-PATHS;
 		$.select-first: $_ with $!select-first;
 		$.select-last:  $_ with $!select-last;
 	}
 	self
 }
 
-multi method add-item(&block, :$height, :$root = $*UI-PARENT, :$border) {
+multi method add-item(&block, :$height!, :$root = $*UI-PARENT, :$border) {
 	my $caller-parent = CALLERS::<$*UI-PARENT> // $*UI-PARENT;
 	my $local-root = $root // $caller-parent;
 	$.auto-subscribe: "add-items", with-ui-context {
 		my @values = block self;
 		for @values -> $node {
-			self.add-item: $node, :root($local-root), |(:$height with $height), |(:$border with $border);
+			self.add-item: $node, :root($local-root), :$height, |(:$border with $border);
 		}
 	}
 	self
@@ -54,12 +59,12 @@ multi method add-item(&block, :$height, :$root = $*UI-PARENT, :$border) {
 multi method set-items(@items) {
 	my $*UI-MULTIPLE-ADD-ITEMS = True;
 	self.clear-items;
-	for @items -> % (:$widget, :$root, :$border, :$height = $widget.fixed-size-value) {
+	for @items -> % (:$widget, :$root, :$height, :$border) {
 		self.add-item(
 			$widget,
-			|(:$root   with $root  ),
+			:$root,
+			:$height,
 			|(:$border with $border),
-			|(:$height with $height),
 		);
 	}
 	{

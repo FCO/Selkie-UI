@@ -29,6 +29,7 @@ use Selkie::UI::CommandPaletteBuilder;
 use Selkie::UI::FileBrowserBuilder;
 use Selkie::UI::HelpOverlayBuilder;
 use Selkie::UI::CardListBuilder;
+use Selkie::UI::ViewportedCardListBuilder;
 use Selkie::UI::RichTextBuilder;
 use Selkie::UI::MultiLineInputBuilder;
 use Selkie::UI::PasswordStrengthBuilder;
@@ -209,6 +210,12 @@ sub ProgressBar(|c)               is export { ss |c, ProgressBarBuilder.new:    
 sub ListView(&block?, |c)         is export { ss |c, ListViewBuilder.new:   |(:&block with &block),                         |c }
 sub ConfirmModal(|c)              is export { ss |c, ConfirmModalBuilder.new:                                               |c }
 sub TabBar(&block?, |c)           is export { ss |c, TabBarBuilder.new:     |(:&block with &block),                         |c }
+
+sub ViewportedCardList(&block?, |c) is export {
+	ss |c, ViewportedCardListBuilder.new:
+	|(:&block with &block),
+	|c
+}
 
 sub TextStream(&block?, :$placeholder, |c) is export {
 	ss |c, TextStreamBuilder.new:
@@ -492,7 +499,7 @@ C<STORE> dispatches update events. Requires an active C<$*UI-APP> context.
 For scalar values (Str, Int, Bool). For compound types, use C<new-array-state>
 or C<new-hash-state>.
 
-    my $counter := new-state 0;
+my $counter := new-state 0;
 
 =head3 C<new-array-state(@default, :$name, :$event)>
 
@@ -500,14 +507,14 @@ Creates a C<ReactiveArray> that implements C<Positional> and C<Iterable>. Bind
 with C<:=>. All mutations (C<push>, C<pop>, C<shift>, C<unshift>, C<splice>,
 C<ASSIGN-POS>) dispatch fresh values to the store.
 
-    my @tasks := new-array-state [{:title<A>, :!done}];
+my @tasks := new-array-state [{:title<A>, :!done}];
 
 =head3 C<new-hash-state(%default, :$name, :$event)>
 
 Creates a C<ReactiveHash> that implements C<Associative> and C<Iterable>. Bind
 with C<:=>. Mutations (C<ASSIGN-KEY>, C<DELETE-KEY>) dispatch fresh values.
 
-    my %config := new-hash-state {:theme<dark>, :refresh(30)};
+my %config := new-hash-state {:theme<dark>, :refresh(30)};
 
 =head3 Builder Auto-Subscribe
 
@@ -515,8 +522,8 @@ Builder methods accept blocks instead of literal values. When a block is provide
 any C<new-state> variables read during evaluation are tracked via C<@*UI-PATHS>.
 The builder subscribes to those state paths and re-runs the block when they change.
 
-    my $counter := new-state 0;
-    Text.text: { "Count: $counter" };  # auto-reacts to $counter changes
+my $counter := new-state 0;
+Text.text: { "Count: $counter" };  # auto-reacts to $counter changes
 
 =head2 Exported Subs
 
@@ -558,14 +565,14 @@ The builder subscribes to those state paths and re-runs the block when they chan
 
 C<Modal> has two forms:
 
-    Modal($builder);              # extracts .modal from an existing builder
-    Modal { ... };                # creates a new modal overlay container
+Modal($builder);              # extracts .modal from an existing builder
+Modal { ... };                # creates a new modal overlay container
 
 =head2 Detached Context
 
 C<Detached> provides an isolated C<@*UI-NODES> context for building widgets
 outside a layout container. Useful in tests:
 
-    my $stream = Detached { TextStream };
+my $stream = Detached { TextStream };
 
 =end pod

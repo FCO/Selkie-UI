@@ -84,6 +84,11 @@ multi method size(&block) {
 	$.auto-subscribe: "size", with-ui-context { self.size: |block self }
 }
 
+method fixed-size-value {
+	return unless $.obj.sizing.mode === SizingMode::SizeFixed;
+	$.obj.sizing.value
+}
+
 multi method focus(Bool() $focus = True) {
 	$*UI-APP.obj.focus: $.obj if $focus;
 	self
