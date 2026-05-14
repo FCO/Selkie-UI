@@ -318,10 +318,9 @@ use Selkie::UI;
 App {
     Screen :name<main>, {
         TabBar {
-            my $content = Border;
             Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
             Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
-            $content
+            Border   # content area — TabBar fills it with the active tab
         }
     }
 }
@@ -340,15 +339,30 @@ Application entry point that initializes the UI and starts the event loop.
 
 The block receives the builder as `$_` and runs inside the application context. All builder functions must be called inside an `App` block.
 
+```raku
+App {
+    Screen :name<main>, { VBox { Button.label: 'Hello' } }
+}
+```
+
 Screen(&block, Str :$name = "main", |c)
 ---------------------------------------
 
 Named screens that can be switched between with `SwitchScreen`.
 
+```raku
+Screen :name<settings>, { VBox { Text(:text('Settings')) } }
+```
+
 Screen($node, Str :$name = "main", |c)
 --------------------------------------
 
 Screen variant that accepts an existing widget node instead of a block.
+
+```raku
+my $node = Detached { VBox { Button.label: 'Ok' } };
+Screen($node): :name<main>;
+```
 
 Tab(&block, Str :$name!, Str :$label!, |c)
 ------------------------------------------
@@ -367,15 +381,36 @@ VBox(&block, :$size, :$style, |c)
 
 Vertical box layout. Stacks children top-to-bottom.
 
+```raku
+VBox {
+    Button.label: 'Top';
+    Button.label: 'Bottom'
+}
+```
+
 HBox(&block, :$size, :$style, |c)
 ---------------------------------
 
 Horizontal box layout. Stacks children left-to-right.
 
+```raku
+HBox {
+    Button.label: 'Left';
+    Button.label: 'Right'
+}
+```
+
 Split(&block?, :$ratio, :$size, :$style, |c)
 --------------------------------------------
 
 Split container. Divides space between children. Optional `:$ratio` sets the split proportion.
+
+```raku
+Split :ratio(0.3), {
+    Text(:text('Left'));
+    Text(:text('Right'))
+}
+```
 
 Inputs and Selection
 --------------------
@@ -384,6 +419,10 @@ Button(:$label, :$size, :$style, |c)
 ------------------------------------
 
 Pressable button with label. Supports `.on-press` handler (idempotent).
+
+```raku
+Button.label('Click').on-press: { say 'clicked' }
+```
 
 Methods:
 
@@ -395,6 +434,10 @@ TextInput(:$placeholder, :$size, :$style, |c)
 ---------------------------------------------
 
 Single-line text input field.
+
+```raku
+TextInput(:placeholder('Name')).on-submit: -> $_, $text { say $text }
+```
 
 Methods:
 
@@ -415,10 +458,18 @@ MultiLineInput(:$placeholder, :$max-lines, :$size, :$style, |c)
 
 Multi-line text input area.
 
+```raku
+MultiLineInput(:max-lines(5)).on-submit: -> $_, $text { say $text.lines }
+```
+
 Checkbox(:$label, :$size, :$style, |c)
 --------------------------------------
 
 Toggleable checkbox with label.
+
+```raku
+Checkbox(:label('Accept terms')).check(True).on-change: -> $, $checked { say $checked }
+```
 
 Methods:
 
@@ -433,15 +484,27 @@ RadioGroup(:$size, :$style, |c)
 
 Group of radio buttons for exclusive selection.
 
+```raku
+RadioGroup.set-items: ['Option A', 'Option B']
+```
+
 Select(:$size, :$style, |c)
 ---------------------------
 
 Dropdown-style selection widget.
 
+```raku
+Select.set-items: ['option-1', 'Option 2']
+```
+
 PasswordStrength(:$input!, :$show-label, :$size, :$style, |c)
 -------------------------------------------------------------
 
 Password input with strength meter visualization.
+
+```raku
+PasswordStrength(:input($input-builder), :show-label)
+```
 
 Text and Rich Content
 ---------------------
@@ -450,6 +513,11 @@ Text(&block?, :$text, :$size, :$style, |c)
 ------------------------------------------
 
 Static text display widget. The optional block variant supports reactive subscriptions when used inside `App`.
+
+```raku
+Text(:text('Hello world'));
+Text.text: { "Count: $counter" }  # reactive — reruns when $counter changes
+```
 
 Methods:
 
@@ -461,6 +529,11 @@ TextStream(:$placeholder, :$size, :$style, |c)
 ----------------------------------------------
 
 Scrollable text stream for streaming log-like content.
+
+```raku
+TextStream.append: 'log line';
+TextStream.append: { $message }  # reactive — appends when $message changes
+```
 
 Methods:
 
@@ -475,6 +548,10 @@ RichText(:$truncated-top, :$truncated-bottom, :$size, :$style, |c)
 
 Rich text widget with styled spans.
 
+```raku
+RichText.content: ['plain', %(:text<styled>, :style{ :sgr<bold> })]
+```
+
 Lists and Tables
 ----------------
 
@@ -482,6 +559,11 @@ ListView(&block?, :$size, :$style, |c)
 --------------------------------------
 
 Scrollable list of items. Supports `.set-items` for reactive data.
+
+```raku
+ListView.set-items: ['A', 'B', 'C'];
+ListView.set-items: { @items };
+```
 
 Methods:
 
@@ -499,6 +581,15 @@ Table(&block?, :$show-scrollbar, :$size, :$style, |c)
 -----------------------------------------------------
 
 Tabular data display with column headers. Accepts columns as array of hashes with `:name`, `:label`, `:sizing`/`:flex`/`:fixed`, `:sortable`, `:render`, and `:sort-key`. The optional block sets row data reactively.
+
+```raku
+Table :columns[
+    %(:name<id>,   :label('ID')),
+    %(:name<name>, :label('Name')),
+], {
+    [{:id(1), :name('Alice')}, {:id(2), :name('Bob')}]
+}
+```
 
 Methods:
 
@@ -518,6 +609,10 @@ CardList(&block?, :$select-first, :$select-last, :$size, :$style, |c)
 ---------------------------------------------------------------------
 
 Scrollable list of variable-height widget cards. Each item is a widget with a required height. Supports reactive data via block setters.
+
+```raku
+CardList { $.add-item(Text(:text('card')), :height(3)) }
+```
 
 Methods:
 
@@ -544,10 +639,9 @@ Tabbed navigation bar. Uses a declarative block-based API. The block must return
 
 ```raku
 TabBar {
-    my $content = Border;
     Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
     Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
-    $content
+    Border   # returned as the content area
 }
 ```
 
@@ -573,35 +667,63 @@ Border(&block?, :$title, :$hide-top-border, :$hide-bottom-border, :$size, :$styl
 
 Bordered container with optional title. Supports reactive title via block.
 
+```raku
+Border :title('Section'), { Text(:text('Content')) }
+```
+
 Modal(Selkie::UI::Base $widget)
 -------------------------------
 
 Extracts the `.modal` widget from an existing builder. Useful with `ShowModal`.
+
+```raku
+ShowModal(Modal($my-builder));  # $my-builder.modal
+```
 
 Modal(&block?, :$width-ratio, :$height-ratio, :$dim-background, :$size, :$style, |c)
 ------------------------------------------------------------------------------------
 
 Modal overlay dialog with configurable size and backdrop dimming.
 
+```raku
+Modal :width-ratio(0.6), :height-ratio(0.5), { Text(:text('Overlay')) }
+```
+
 ConfirmModal(:$title, :$message, :$yes-label, :$no-label, :$width-ratio, :$height-ratio, :on-result, |c)
 --------------------------------------------------------------------------------------------------------
 
 Confirmation dialog with accept/cancel buttons.
+
+```raku
+ConfirmModal :title('Confirm'), :message('Proceed?'), :on-result(-> $, $result { say $result })
+```
 
 Toast(Str $message, Numeric :$duration = 3e0)
 ---------------------------------------------
 
 Temporary toast notification dispatched via the app.
 
+```raku
+Toast('Saved!', :duration(2));
+```
+
 HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c)
 ----------------------------------------------------------
 
 Keyboard shortcut help overlay.
 
+```raku
+HelpOverlay   # auto-generates from app keybindings
+```
+
 CommandPalette(&block?, :$size, :$style, |c)
 --------------------------------------------
 
 Command palette for fuzzy-searchable actions. The optional block registers commands.
+
+```raku
+CommandPalette { $.add-command({ say 'new' }, :label<New>) }
+```
 
 Methods:
 
@@ -620,6 +742,10 @@ FileBrowser(&block?, Bool :$show-modal, Bool :$focus, :&on-select, :$size, :$sty
 
 File system browser widget that opens as a modal.
 
+```raku
+FileBrowser :show-modal, :on-select(-> $, $path { say $path })
+```
+
 Miscellaneous
 -------------
 
@@ -628,10 +754,18 @@ ScrollView(&block?, :$show-scrollbar, :$size, :$style, |c)
 
 Scrollable viewport container for overflowing content.
 
+```raku
+ScrollView { VBox { ... } }
+```
+
 Spinner(:@frames, :$interval, :$style, :$size, |c)
 --------------------------------------------------
 
 Animated spinner with configurable frames and interval.
+
+```raku
+Spinner(:frames(['/', '-', '\\', '|']), :interval(0.1))
+```
 
 Methods:
 
@@ -644,10 +778,18 @@ Image(&block?, :$file, :$size, :$style, |c)
 
 Image display widget. Supports reactive file binding via block.
 
+```raku
+Image(:file('logo.png'))
+```
+
 ProgressBar(:$size, :$style, |c)
 --------------------------------
 
 Progress bar with configurable value.
+
+```raku
+ProgressBar.progress(0.75).show-percentage
+```
 
 Methods:
 
@@ -667,45 +809,81 @@ Plot(:$type, :$min-y, :$max-y, :$title, :$gridtype, :$rangex, :@store-path, :$em
 
 General-purpose plot widget.
 
+```raku
+Plot :type<bar>, :data([{:x(0),:y(1)},{:x(1),:y(3)}]), :title('Sales')
+```
+
 BarChart(:@data, :@store-path, :$orientation, :$palette, :$show-axis, :$show-labels, :$min, :$max, :$tick-count, :$empty-message, :$size, :$style, |c)
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Bar chart with configurable orientation and styling.
+
+```raku
+BarChart(:data([{:label<A>,:value(10)},{:label<B>,:value(20)}]))
+```
 
 LineChart(:@series, :&store-path-fn, :$palette, :$show-axis, :$show-legend, :$fill-below, :$overlap, :$y-min, :$y-max, :$tick-count, :$empty-message, :$size, :$style, |c)
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Line chart with multiple series support.
 
+```raku
+LineChart(:series([{:name<A>,:values[1,2,3]}]))
+```
+
 ScatterPlot(:@series, :@store-path, :$palette, :$x-min, :$x-max, :$y-min, :$y-max, :$overlap, :$empty-message, :$size, :$style, |c)
 -----------------------------------------------------------------------------------------------------------------------------------
 
 Scatter plot for point data visualization.
+
+```raku
+ScatterPlot(:series([{:name<pts>,:x[1,2,3],:y[4,5,6]}]))
+```
 
 Sparkline(:@data, :@store-path, :$min, :$max, :$empty-message, :$size, :$style, |c)
 -----------------------------------------------------------------------------------
 
 Compact inline sparkline chart.
 
+```raku
+Sparkline(:data([1, 3, 2, 5, 4]))
+```
+
 Heatmap(:@data, :@store-path, :$ramp, :$min, :$max, :$empty-message, :$size, :$style, |c)
 -----------------------------------------------------------------------------------------
 
 Heatmap for matrix data visualization.
+
+```raku
+Heatmap(:data([[1,2],[3,4]]))
+```
 
 Histogram(:@values, :$bins, :@bin-edges, :$orientation, :$palette, :$show-axis, :$show-labels, :$min, :$max, :$tick-count, :$empty-message, :$size, :$style, |c)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Histogram for distribution visualization.
 
+```raku
+Histogram(:values([1,1,2,2,2,3]), :bins(3))
+```
+
 Axis(:$min!, :$max!, :$edge, :$tick-count, :$show-line, :$size, :$style, |c)
 ----------------------------------------------------------------------------
 
 Chart axis with configurable range and ticks.
 
+```raku
+Axis(:min(0), :max(100), :tick-count(5))
+```
+
 Legend(:@series, :$orientation, :$swatch, :$size, :$style, |c)
 --------------------------------------------------------------
 
 Chart legend for multi-series plots.
+
+```raku
+Legend(:series([{:name<A>,:swatch<red>}]))
+```
 
 State and Helpers
 -----------------

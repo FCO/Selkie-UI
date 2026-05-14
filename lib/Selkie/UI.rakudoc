@@ -287,10 +287,9 @@ use Selkie::UI;
 App {
     Screen :name<main>, {
         TabBar {
-            my $content = Border;
             Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
             Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
-            $content
+            Border   # content area — TabBar fills it with the active tab
         }
     }
 }
@@ -308,15 +307,30 @@ Application entry point that initializes the UI and starts the event loop.
 The block receives the builder as C<$_> and runs inside the application context.
 All builder functions must be called inside an C<App> block.
 
+=begin code :lang<raku>
+App {
+    Screen :name<main>, { VBox { Button.label: 'Hello' } }
+}
+=end code
+
 =for head2 :numbered
 Screen(&block, Str :$name = "main", |c)
 
 Named screens that can be switched between with C<SwitchScreen>.
 
+=begin code :lang<raku>
+Screen :name<settings>, { VBox { Text(:text('Settings')) } }
+=end code
+
 =for head2 :numbered
 Screen($node, Str :$name = "main", |c)
 
 Screen variant that accepts an existing widget node instead of a block.
+
+=begin code :lang<raku>
+my $node = Detached { VBox { Button.label: 'Ok' } };
+Screen($node): :name<main>;
+=end code
 
 =for head2 :numbered
 Tab(&block, Str :$name!, Str :$label!, |c)
@@ -335,10 +349,24 @@ VBox(&block, :$size, :$style, |c)
 
 Vertical box layout. Stacks children top-to-bottom.
 
+=begin code :lang<raku>
+VBox {
+    Button.label: 'Top';
+    Button.label: 'Bottom'
+}
+=end code
+
 =for head2 :numbered
 HBox(&block, :$size, :$style, |c)
 
 Horizontal box layout. Stacks children left-to-right.
+
+=begin code :lang<raku>
+HBox {
+    Button.label: 'Left';
+    Button.label: 'Right'
+}
+=end code
 
 =for head2 :numbered
 Split(&block?, :$ratio, :$size, :$style, |c)
@@ -346,12 +374,23 @@ Split(&block?, :$ratio, :$size, :$style, |c)
 Split container. Divides space between children. Optional C<:$ratio> sets
 the split proportion.
 
+=begin code :lang<raku>
+Split :ratio(0.3), {
+    Text(:text('Left'));
+    Text(:text('Right'))
+}
+=end code
+
 =head2 Inputs and Selection
 
 =for head2 :numbered
 Button(:$label, :$size, :$style, |c)
 
 Pressable button with label. Supports C<.on-press> handler (idempotent).
+
+=begin code :lang<raku>
+Button.label('Click').on-press: { say 'clicked' }
+=end code
 
 Methods:
 =item1 C<.label(Str)> / C<.label(&block)> — Set or reactively bind label text
@@ -361,6 +400,10 @@ Methods:
 TextInput(:$placeholder, :$size, :$style, |c)
 
 Single-line text input field.
+
+=begin code :lang<raku>
+TextInput(:placeholder('Name')).on-submit: -> $_, $text { say $text }
+=end code
 
 Methods:
 =item1 C<.text(Str)> / C<.text(&block)> — Get/set text
@@ -375,10 +418,18 @@ MultiLineInput(:$placeholder, :$max-lines, :$size, :$style, |c)
 
 Multi-line text input area.
 
+=begin code :lang<raku>
+MultiLineInput(:max-lines(5)).on-submit: -> $_, $text { say $text.lines }
+=end code
+
 =for head2 :numbered
 Checkbox(:$label, :$size, :$style, |c)
 
 Toggleable checkbox with label.
+
+=begin code :lang<raku>
+Checkbox(:label('Accept terms')).check(True).on-change: -> $, $checked { say $checked }
+=end code
 
 Methods:
 =item1 C<.label(Str)> / C<.label(&block)> — Set or reactively bind label
@@ -390,15 +441,27 @@ RadioGroup(:$size, :$style, |c)
 
 Group of radio buttons for exclusive selection.
 
+=begin code :lang<raku>
+RadioGroup.set-items: ['Option A', 'Option B']
+=end code
+
 =for head2 :numbered
 Select(:$size, :$style, |c)
 
 Dropdown-style selection widget.
 
+=begin code :lang<raku>
+Select.set-items: ['option-1', 'Option 2']
+=end code
+
 =for head2 :numbered
 PasswordStrength(:$input!, :$show-label, :$size, :$style, |c)
 
 Password input with strength meter visualization.
+
+=begin code :lang<raku>
+PasswordStrength(:input($input-builder), :show-label)
+=end code
 
 =head2 Text and Rich Content
 
@@ -408,6 +471,11 @@ Text(&block?, :$text, :$size, :$style, |c)
 Static text display widget. The optional block variant supports reactive
 subscriptions when used inside C<App>.
 
+=begin code :lang<raku>
+Text(:text('Hello world'));
+Text.text: { "Count: $counter" }  # reactive — reruns when $counter changes
+=end code
+
 Methods:
 =item1 C<.text(Str)> / C<.text(&block)> — Set or reactively bind text
 =item1 C<.text-silent(Str)> — Set text without triggering events
@@ -416,6 +484,11 @@ Methods:
 TextStream(:$placeholder, :$size, :$style, |c)
 
 Scrollable text stream for streaming log-like content.
+
+=begin code :lang<raku>
+TextStream.append: 'log line';
+TextStream.append: { $message }  # reactive — appends when $message changes
+=end code
 
 Methods:
 =item1 C<.append(Str)> / C<.append(&block)> — Append text (block = reactive)
@@ -427,12 +500,21 @@ RichText(:$truncated-top, :$truncated-bottom, :$size, :$style, |c)
 
 Rich text widget with styled spans.
 
+=begin code :lang<raku>
+RichText.content: ['plain', %(:text<styled>, :style{ :sgr<bold> })]
+=end code
+
 =head2 Lists and Tables
 
 =for head2 :numbered
 ListView(&block?, :$size, :$style, |c)
 
 Scrollable list of items. Supports C<.set-items> for reactive data.
+
+=begin code :lang<raku>
+ListView.set-items: ['A', 'B', 'C'];
+ListView.set-items: { @items };
+=end code
 
 Methods:
 =item1 C<.set-items(@items)> / C<.set-items(&block)> — Set list items
@@ -448,6 +530,15 @@ Tabular data display with column headers. Accepts columns as array of hashes
 with C<:name>, C<:label>, C<:sizing>/C<:flex>/C<:fixed>, C<:sortable>,
 C<:render>, and C<:sort-key>. The optional block sets row data reactively.
 
+=begin code :lang<raku>
+Table :columns[
+    %(:name<id>,   :label('ID')),
+    %(:name<name>, :label('Name')),
+], {
+    [{:id(1), :name('Alice')}, {:id(2), :name('Bob')}]
+}
+=end code
+
 Methods:
 =item1 C<.add-column(:$name!, :$label!, ...)> — Add a column
 =item1 C<.rows(@rows)> / C<.rows(&block)> — Set or reactively bind rows
@@ -461,6 +552,10 @@ CardList(&block?, :$select-first, :$select-last, :$size, :$style, |c)
 
 Scrollable list of variable-height widget cards. Each item is a widget with a
 required height. Supports reactive data via block setters.
+
+=begin code :lang<raku>
+CardList { $.add-item(Text(:text('card')), :height(3)) }
+=end code
 
 Methods:
 =item1 C<.add-item($widget, :$height!, :$root, :$border)> — Add a card
@@ -481,10 +576,9 @@ C<.content> methods. Use C<Tab> inside the block to define screens.
 
 =begin code :lang<raku>
 TabBar {
-    my $content = Border;
     Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
     Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
-    $content
+    Border   # returned as the content area
 }
 =end code
 
@@ -503,36 +597,64 @@ Border(&block?, :$title, :$hide-top-border, :$hide-bottom-border, :$size, :$styl
 
 Bordered container with optional title. Supports reactive title via block.
 
+=begin code :lang<raku>
+Border :title('Section'), { Text(:text('Content')) }
+=end code
+
 =for head2 :numbered
 Modal(Selkie::UI::Base $widget)
 
 Extracts the C<.modal> widget from an existing builder. Useful with C<ShowModal>.
+
+=begin code :lang<raku>
+ShowModal(Modal($my-builder));  # $my-builder.modal
+=end code
 
 =for head2 :numbered
 Modal(&block?, :$width-ratio, :$height-ratio, :$dim-background, :$size, :$style, |c)
 
 Modal overlay dialog with configurable size and backdrop dimming.
 
+=begin code :lang<raku>
+Modal :width-ratio(0.6), :height-ratio(0.5), { Text(:text('Overlay')) }
+=end code
+
 =for head2 :numbered
 ConfirmModal(:$title, :$message, :$yes-label, :$no-label, :$width-ratio, :$height-ratio, :on-result, |c)
 
 Confirmation dialog with accept/cancel buttons.
+
+=begin code :lang<raku>
+ConfirmModal :title('Confirm'), :message('Proceed?'), :on-result(-> $, $result { say $result })
+=end code
 
 =for head2 :numbered
 Toast(Str $message, Numeric :$duration = 3e0)
 
 Temporary toast notification dispatched via the app.
 
+=begin code :lang<raku>
+Toast('Saved!', :duration(2));
+=end code
+
 =for head2 :numbered
 HelpOverlay(:$app!, :$focused-widget, :$size, :$style, |c)
 
 Keyboard shortcut help overlay.
+
+=begin code :lang<raku>
+HelpOverlay   # auto-generates from app keybindings
+=end code
 
 =for head2 :numbered
 CommandPalette(&block?, :$size, :$style, |c)
 
 Command palette for fuzzy-searchable actions. The optional block
 registers commands.
+
+=begin code :lang<raku>
+CommandPalette { $.add-command({ say 'new' }, :label<New>) }
+=end code
 
 Methods:
 =item1 C<.add-command(&action, :$label!)> — Register a command
@@ -546,6 +668,10 @@ FileBrowser(&block?, Bool :$show-modal, Bool :$focus, :&on-select, :$size, :$sty
 
 File system browser widget that opens as a modal.
 
+=begin code :lang<raku>
+FileBrowser :show-modal, :on-select(-> $, $path { say $path })
+=end code
+
 =head2 Miscellaneous
 
 =for head2 :numbered
@@ -553,10 +679,18 @@ ScrollView(&block?, :$show-scrollbar, :$size, :$style, |c)
 
 Scrollable viewport container for overflowing content.
 
+=begin code :lang<raku>
+ScrollView { VBox { ... } }
+=end code
+
 =for head2 :numbered
 Spinner(:@frames, :$interval, :$style, :$size, |c)
 
 Animated spinner with configurable frames and interval.
+
+=begin code :lang<raku>
+Spinner(:frames(['/', '-', '\\', '|']), :interval(0.1))
+=end code
 
 Methods:
 =item1 C<.tick> — Advance to next frame
@@ -567,10 +701,18 @@ Image(&block?, :$file, :$size, :$style, |c)
 
 Image display widget. Supports reactive file binding via block.
 
+=begin code :lang<raku>
+Image(:file('logo.png'))
+=end code
+
 =for head2 :numbered
 ProgressBar(:$size, :$style, |c)
 
 Progress bar with configurable value.
+
+=begin code :lang<raku>
+ProgressBar.progress(0.75).show-percentage
+=end code
 
 Methods:
 =item1 C<.progress(Numeric)> / C<.progress(&block)> — Set progress value
@@ -585,45 +727,81 @@ Plot(:$type, :$min-y, :$max-y, :$title, :$gridtype, :$rangex, :@store-path, :$em
 
 General-purpose plot widget.
 
+=begin code :lang<raku>
+Plot :type<bar>, :data([{:x(0),:y(1)},{:x(1),:y(3)}]), :title('Sales')
+=end code
+
 =for head2 :numbered
 BarChart(:@data, :@store-path, :$orientation, :$palette, :$show-axis, :$show-labels, :$min, :$max, :$tick-count, :$empty-message, :$size, :$style, |c)
 
 Bar chart with configurable orientation and styling.
+
+=begin code :lang<raku>
+BarChart(:data([{:label<A>,:value(10)},{:label<B>,:value(20)}]))
+=end code
 
 =for head2 :numbered
 LineChart(:@series, :&store-path-fn, :$palette, :$show-axis, :$show-legend, :$fill-below, :$overlap, :$y-min, :$y-max, :$tick-count, :$empty-message, :$size, :$style, |c)
 
 Line chart with multiple series support.
 
+=begin code :lang<raku>
+LineChart(:series([{:name<A>,:values[1,2,3]}]))
+=end code
+
 =for head2 :numbered
 ScatterPlot(:@series, :@store-path, :$palette, :$x-min, :$x-max, :$y-min, :$y-max, :$overlap, :$empty-message, :$size, :$style, |c)
 
 Scatter plot for point data visualization.
+
+=begin code :lang<raku>
+ScatterPlot(:series([{:name<pts>,:x[1,2,3],:y[4,5,6]}]))
+=end code
 
 =for head2 :numbered
 Sparkline(:@data, :@store-path, :$min, :$max, :$empty-message, :$size, :$style, |c)
 
 Compact inline sparkline chart.
 
+=begin code :lang<raku>
+Sparkline(:data([1, 3, 2, 5, 4]))
+=end code
+
 =for head2 :numbered
 Heatmap(:@data, :@store-path, :$ramp, :$min, :$max, :$empty-message, :$size, :$style, |c)
 
 Heatmap for matrix data visualization.
+
+=begin code :lang<raku>
+Heatmap(:data([[1,2],[3,4]]))
+=end code
 
 =for head2 :numbered
 Histogram(:@values, :$bins, :@bin-edges, :$orientation, :$palette, :$show-axis, :$show-labels, :$min, :$max, :$tick-count, :$empty-message, :$size, :$style, |c)
 
 Histogram for distribution visualization.
 
+=begin code :lang<raku>
+Histogram(:values([1,1,2,2,2,3]), :bins(3))
+=end code
+
 =for head2 :numbered
 Axis(:$min!, :$max!, :$edge, :$tick-count, :$show-line, :$size, :$style, |c)
 
 Chart axis with configurable range and ticks.
 
+=begin code :lang<raku>
+Axis(:min(0), :max(100), :tick-count(5))
+=end code
+
 =for head2 :numbered
 Legend(:@series, :$orientation, :$swatch, :$size, :$style, |c)
 
 Chart legend for multi-series plots.
+
+=begin code :lang<raku>
+Legend(:series([{:name<A>,:swatch<red>}]))
+=end code
 
 =head2 State and Helpers
 

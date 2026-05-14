@@ -126,10 +126,9 @@ TabBar uses a declarative block-based API. The block receives the TabBarBuilder
 as C<$_> and should return a content container (e.g., Border):
 
     TabBar {
-        my $content = Border;
         Tab { Text(:text('Dashboard')) }: :name<dash>, :label('Dashboard');
         Tab { Text(:text('Settings')) }:  :name<set>,  :label('Settings');
-        $content
+        Border   # returned as the content area
     }
 
 =head2 Attributes
