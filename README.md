@@ -24,10 +24,10 @@ SYNOPSIS
 use Selkie::UI;
 
 App {
-    Screen :name<main>, {
-        VBox {
-            Button.label: "Click me"
-        }
+    my $count := new-state 0;
+    VBox {
+        Text { "count: $count" }
+        Button :label("Click me"), :on-press{ $count++ }
     }
 }
 ```

@@ -15,10 +15,10 @@ This module is under active development. API may change.
 use Selkie::UI;
 
 App {
-    Screen :name<main>, {
-        VBox {
-            Button.label: "Click me"
-        }
+    my $count := new-state 0;
+    VBox {
+        Text { "count: $count" }
+        Button :label("Click me"), :on-press{ $count++ }
     }
 }
 =end code
