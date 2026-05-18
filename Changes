@@ -1,6 +1,8 @@
 Revision history for Selkie::UI
 
 {{$NEXT}}
+
+0.0.4  2026-05-18T17:56:19+01:00
     - Replace `-I lib` with `-I.`
 
 0.0.3  2026-05-18T17:33:25+01:00
