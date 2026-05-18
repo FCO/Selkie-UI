@@ -4,11 +4,11 @@
     "Fernando Correa de Oliveira"
   ],
   "build-depends": [
-    "Selkie",
+    "Selkie:ver<0.7.3+>:auth<zef:apogee>",
     "UUID"
   ],
   "depends": [
-    "Selkie",
+    "Selkie:ver<0.7.3+>:auth<zef:apogee>",
     "UUID"
   ],
   "description": "Declarative DSL for building terminal user interfaces with the Selkie framework — reactive state management, auto-subscribe setters, and 38+ widget builders",
@@ -68,7 +68,7 @@
   "tags": [
   ],
   "test-depends": [
-    "Selkie",
+    "Selkie:ver<0.7.3+>:auth<zef:apogee>",
     "UUID"
   ],
   "version": "0.0.1"
