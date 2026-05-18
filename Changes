@@ -1,6 +1,7 @@
 Revision history for Selkie::UI
 
 {{$NEXT}}
+    - Add version to Selkie dependency
 
 0.0.1  2026-05-14T03:20:14+01:00
     - Documentation improvements: rakudoc, CONTRIBUTING.md, CODE_OF_CONDUCT.md
