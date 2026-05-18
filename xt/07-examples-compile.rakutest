@@ -18,7 +18,7 @@ plan 2;
 subtest 'examples compile' => {
     plan @examples.elems;
     for @examples -> $path {
-        my $proc = run $*EXECUTABLE, '-I', 'lib', '-c', $path, :out, :err;
+        my $proc = run $*EXECUTABLE, '-I.', '-c', $path, :out, :err;
         $proc.out.close;
         my $err = $proc.err.slurp-rest;
         $proc.err.close;
@@ -29,7 +29,7 @@ subtest 'examples compile' => {
 subtest 'examples compile without warnings' => {
     plan @examples.elems;
     for @examples -> $path {
-        my $proc = run $*EXECUTABLE, '-I', 'lib', '-c', $path, :out, :err;
+        my $proc = run $*EXECUTABLE, '-I.', '-c', $path, :out, :err;
         $proc.out.close;
         my $err = $proc.err.slurp-rest;
         $proc.err.close;
