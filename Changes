@@ -2,6 +2,9 @@ Revision history for Selkie::UI
 
 {{$NEXT}}
 
+0.0.3  2026-05-18T17:33:25+01:00
+    - Move compile tests to xt/
+
 0.0.2  2026-05-18T16:57:14+01:00
     - Add version to Selkie dependency
 
