@@ -7,7 +7,7 @@ use Selkie::Style;
 use Selkie::Sizing;
 
 $*OUT = $*ERR = open "log.log", :w;
-App {
+App :run{ $*TEST.not }, {
 	my $current-path         := new-state '';
 	my $kind                 := new-state 'none';
 	my $text                 := new-state '';

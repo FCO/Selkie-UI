@@ -33,7 +33,7 @@ for ^200 {
 	@scatter-points.push: $x => $y;
 }
 
-App {
+App :run{ $*TEST.not }, {
 	sub shift-append(@buf, Int $v --> List) {
 		|@buf.tail(WINDOW-SIZE - 1), $v
 	}

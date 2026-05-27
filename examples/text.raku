@@ -1,5 +1,5 @@
 use Selkie::UI;
-App {
+App :run{ $*TEST.not }, {
 	my $next-msg := new-state Str;
 	VBox {
 		TextStream.append: { $next-msg };

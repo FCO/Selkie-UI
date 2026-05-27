@@ -7,7 +7,7 @@ use Selkie::UI;
 use Selkie::Style;
 use Selkie::Sizing;
 
-App {
+App :run{ $*TEST.not }, {
 	my $counter := new-state 0;
 
 	VBox {

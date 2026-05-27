@@ -6,7 +6,7 @@ use Selkie::UI;
 use Selkie::Style;
 
 $*ERR = open "log.log", :w;
-App :start-screen<list>, {
+App :start-screen<list>, :run{ $*TEST.not }, {
 	my @tasks := new-array-state [
 		{ :1id, text => 'Read the Selkie docs',      :done  },
 		{ :2id, text => 'Build a tiny TUI',          :!done },

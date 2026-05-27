@@ -135,7 +135,12 @@ multi Tab($node, Str :$name!, Str :$label!, |c) is export {
 	ScreenBuilder.new: :$name, :$label, :screen($node), |c
 }
 
-sub App(&block, |c) is export { AppBuilder.new(:&block, |c).run }
+sub App(&block, :$run = True, |c) is export {
+    my $app = AppBuilder.new(:&block, |c);
+    my $should-run = $run ~~ Callable ?? $run() !! $run;
+    $app.run if $should-run;
+    $app
+}
 
 sub OnFrame(&block) is export {
 	$*UI-APP.obj.on-frame(with-ui-context &block)

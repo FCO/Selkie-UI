@@ -7,7 +7,7 @@ use Selkie::Style;
 use Selkie::Sizing;
 
 $*OUT = $*ERR = open "log.log", :w;
-App {
+App :run{ $*TEST.not }, {
 	.obj.store.enable-debug: log => $*OUT;
 	my %form  := new-hash-state %( dirty => False );
 

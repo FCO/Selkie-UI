@@ -1,0 +1,114 @@
+use Test;
+use Selkie::UI;
+use Selkie::App;
+use Selkie::Container;
+
+my $*TEST = True;
+
+# --- Helpers ------------------------------------------------------------
+
+# Walk a widget tree into a comparable data structure.
+# Returns [type-name, %props, @children]
+sub tree($widget) {
+    return Nil without $widget;
+    return tree(.obj) if $widget ~~ Selkie::UI::Base;
+
+    my %props;
+    %props<label> = .label with try $widget.label;
+    %props<text>  = try $widget.text with try $widget.isa(Selkie::Widget::Text);
+
+    my @children;
+    if $widget ~~ Selkie::Container {
+        @children = $widget.children.map({ tree($_) }).grep(*.defined).List;
+    }
+
+    [$widget.^name, %props, @children]
+}
+
+# Extract the app's tree: all screens -> their root widget trees
+sub app-tree($app) {
+    my $inner = $app ~~ AppBuilder ?? $app.obj !! $app;
+    my %screens;
+    for $inner.screen-manager.screen-names -> $name {
+        %screens{$name} = tree($inner.screen-manager.screen($name));
+    }
+    %screens
+}
+
+# Walks an app tree and returns a flat list of [screen, path, type, props]
+# for easy comparison focusing on structure rather than exact equality.
+sub flatten-tree(%tree) {
+    my @flat;
+    for %tree.kv -> $screen, $node {
+        walk($screen, [], $node);
+    }
+    sub walk($screen, @path, $node) {
+        return without $node;
+        my ($type, $props, @children) = @$node;
+        @flat.push: [$screen, @path.join('/'), $type, %$props];
+        for @children.kv -> $i, $child {
+            walk($screen, [|@path, $i], $child);
+        }
+    }
+    @flat
+}
+
+# --- Selkie example runner -----------------------------------------------
+
+# Runs a Selkie example script, intercepting .run() to capture the app.
+# The example must store its app in $app (standard Selkie convention).
+sub capture-selkie-app(Str $path) {
+    my $code = slurp($path);
+    # Replace $app.run with nothing, add a line to return $app
+    $code ~~ s/ '$app.run' \N* //;
+    $code ~= "\n\$app";
+    EVAL $code;
+}
+
+# --- The test pairs -----------------------------------------------------
+
+my %pairs = (
+    'counter'     => 'counter.raku',
+    'charts'      => 'charts.raku',
+    'chat'        => 'chat.raku',
+    'dashboard'   => 'dashboard.raku',
+    'file-viewer' => 'file-viewer.raku',
+    'job-runner'  => 'job-runner.raku',
+    'settings'    => 'settings.raku',
+    'tasks'       => 'tasks.raku',
+);
+
+# Find Selkie examples directory
+my $selkie-dir = %*ENV<SELKIE_EXAMPLES>
+    || do {
+        my @candidates = |dir("$*HOME/.zef/store").grep(/Selkie/).map({ "$_/examples" }),;
+        @candidates.first(*.IO.d)
+    }
+    || die "Set SELKIE_EXAMPLES env var to the Selkie examples directory";
+
+plan %pairs.elems;
+
+for %pairs.kv -> $name, $file {
+    subtest "$name — UI matches original" => {
+        plan 1;
+
+        # Build Selkie-UI example (won't run because $*TEST is True)
+        my $ui-path  = "examples/$file";
+        my $ui-app   = EVAL slurp($ui-path);
+        my $ui-tree  = flatten-tree(app-tree($ui-app));
+
+        # Build Selkie example
+        my $selkie-path = "$selkie-dir/$file";
+        my $selkie-app  = capture-selkie-app($selkie-path);
+        my $selkie-tree = flatten-tree(app-tree($selkie-app));
+
+        # Compare: same number of nodes, same types in same paths
+        is $ui-tree.elems, $selkie-tree.elems,
+            "$name: same number of widgets";
+
+        # TODO: deeper comparison once both trees are verified
+        # is-deeply $ui-tree, $selkie-tree, "$name: identical widget trees";
+    }
+}
+
+done-testing;

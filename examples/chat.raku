@@ -47,7 +47,7 @@ sub light-theme(--> Selkie::Theme) {
 	);
 }
 
-App {
+App :run{ $*TEST.not }, {
 	my @messages := new-array-state [
 		{
 			speaker => 'bot',
