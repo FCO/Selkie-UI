@@ -76,8 +76,6 @@ method on-select(&block) is idempotent {
 }
 
 method on-activate(&block) is idempotent {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
 	$!obj.on-activate.tap: with-ui-context -> $idx { block self, $idx }
 	self
 }

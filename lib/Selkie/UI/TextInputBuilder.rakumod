@@ -14,7 +14,13 @@ has Selkie::Widget::TextInput $.obj .= new:
 |(:$!mask-char   with $!mask-char  );
 
 multi method mask(Str :$char!) {
-	$!obj .= new: |(:$!placeholder with $!placeholder), |(:$!sizing with $!sizing), |(:$char with $char);
+	$!mask-char = $char;
+	my $text = $!obj.text;
+	$!obj .= new:
+		|(:$!placeholder with $!placeholder),
+		|(:$!sizing      with $!sizing),
+		|(:$char);
+	$!obj.set-text($text) with $text;
 	self
 }
 
@@ -25,8 +31,6 @@ multi method mask(&mask-block) {
 }
 
 method on-submit(&block) is idempotent {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
 	$!obj.on-submit.tap: with-ui-context -> $text {
 		block self, $text
 	}
@@ -34,8 +38,6 @@ method on-submit(&block) is idempotent {
 }
 
 method on-change(&block) is idempotent {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
 	$!obj.on-change.tap: with-ui-context -> $text {
 		block self, $text
 	}

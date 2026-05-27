@@ -16,6 +16,7 @@ submethod TWEAK(:&block) {
 	block self;
 	die "No screens to show" unless @*UI-NODES;
 	my Str $default;
+	my $unnamed-count = 0;
 	for @*UI-NODES -> $node {
 		given $node {
 			when Selkie::UI::ScreenBuilder {
@@ -23,7 +24,7 @@ submethod TWEAK(:&block) {
 				self.add-screen: .name, .screen.obj;
 			}
 			default {
-				die "More than one unnamed screen..." if $++;
+				die "More than one unnamed screen..." if $unnamed-count++;
 				$default = "main";
 				self.add-screen: $default, .obj;
 			}
