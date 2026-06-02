@@ -1,5 +1,6 @@
 use Test;
 use Selkie::UI;
+use Selkie::UI::AppBuilder;
 use Selkie::App;
 use Selkie::Container;
 
