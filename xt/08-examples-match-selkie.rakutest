@@ -1,6 +1,5 @@
 use Test;
 use Selkie::UI;
-use Selkie::UI::AppBuilder;
 use Selkie::App;
 use Selkie::Container;
 
@@ -28,7 +27,7 @@ sub tree($widget) {
 
 # Extract the app's tree: all screens -> their root widget trees
 sub app-tree($app) {
-    my $inner = ($app ~~ AppBuilder) ?? $app.obj !! $app;
+    my $inner = ($app ~~ Selkie::UI::AppBuilder) ?? $app.obj !! $app;
     my %screens;
     for $inner.screen-manager.screen-names -> $name {
         %screens{$name} = tree($inner.screen-manager.screen($name));
