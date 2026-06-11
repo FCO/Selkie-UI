@@ -85,7 +85,7 @@ sub new-array-state(@default, :$name = UUID.new.Str,
 		:db{ $name => %ev<value> }
 	}
 
-	$store.dispatch: $event, value => @default;
+	$store.dispatch: $event, :value(@default);
 	$store.tick;
 
 	ReactiveArray.new(:$store, :$name, :$event)
@@ -99,7 +99,7 @@ sub new-hash-state(%default, :$name = UUID.new.Str,
 		:db{ $name => %ev<value> }
 	}
 
-	$store.dispatch: $event, value => %default;
+	$store.dispatch: $event, :value(%default);
 	$store.tick;
 
 	ReactiveHash.new(:$store, :$name, :$event)

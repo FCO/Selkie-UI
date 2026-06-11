@@ -32,7 +32,7 @@ method add-column(
 	my %size = %(
 		|(:$flex  with $flex             ),
 		|(:$fixed with $fixed            ),
-		|(fixed => $size if $size ~~ Int ),
+		|(:fixed($size) if $size ~~ Int ),
 		|(|%$size if $size ~~ Associative),
 	);
 	$sizing //= Sizing."{ .key }"(.value) with %size.pairs.head;
