@@ -52,7 +52,7 @@ multi method select-first(&block) {
 }
 
 multi method select-last(Bool() $select = True) {
-	$!obj.select-last: $!obj.items.end if $select;
+	$!obj.select-last if $select;
 	self
 }
 

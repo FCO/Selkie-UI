@@ -108,7 +108,7 @@ sub status-cell(Str $s --> Str) {
 	}
 }
 
-App {
+App :run{ $*TEST.not }, {
 	my $active-tab := new-state 'servers';
 	my @servers    := new-array-state seed-servers();
 	my @tasks      := new-array-state seed-tasks();

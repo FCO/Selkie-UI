@@ -7,7 +7,7 @@ use Selkie::Style;
 use Selkie::Sizing;
 
 $*OUT = $*ERR = open "log.log", :w;
-App {
+App :run{ $*TEST.not }, {
 	constant TOTAL-STEPS = 8;
 
 	my $running     := new-state False;

@@ -32,7 +32,7 @@ method add-column(
 	my %size = %(
 		|(:$flex  with $flex             ),
 		|(:$fixed with $fixed            ),
-		|(fixed => $size if $size ~~ Int ),
+		|(:fixed($size) if $size ~~ Int ),
 		|(|%$size if $size ~~ Associative),
 	);
 	$sizing //= Sizing."{ .key }"(.value) with %size.pairs.head;
@@ -76,8 +76,6 @@ method on-select(&block) is idempotent {
 }
 
 method on-activate(&block) is idempotent {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
 	$!obj.on-activate.tap: with-ui-context -> $idx { block self, $idx }
 	self
 }

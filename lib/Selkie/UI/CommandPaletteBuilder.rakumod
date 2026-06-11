@@ -43,8 +43,14 @@ multi method commands(@commands) {
 	self.clear-commands;
 	for @commands -> $cmd {
 		given $cmd {
-			when Pair { self.add-command($cmd.value, :label($cmd.key)) }
+			when Pair {
+				die "Command action must be Callable, got {$cmd.value.^name}"
+					unless $cmd.value ~~ Callable;
+				self.add-command($cmd.value, :label($cmd.key))
+			}
 			when Associative {
+				die "Command action must be Callable, got {$cmd<action>.^name}"
+					unless $cmd<action> ~~ Callable;
 				self.add-command($cmd<action>, :label($cmd<label>))
 			}
 			default { }
@@ -95,8 +101,6 @@ method show-modal {
 }
 
 method on-command(&block) is idempotent {
-	my $app = $*UI-APP;
-	my $parent = $*UI-PARENT;
 	$!obj.on-command.tap: with-ui-context -> $cmd {
 		block self, $cmd
 	}
